@@ -233,6 +233,31 @@ async function main() {
   ok("foreign scenario content never reaches the model",
     bTurn.length > 0 && !bTurn.includes("机密标记XYZ") && !bTurn.includes("绝密开场"));
 
+  console.log("== 4. 已移除的聊天软件桥接 hub config: secrets masked, never clobbered by masks ==");
+  const REAL_TOKEN = "hub-secret-token-xyz";
+  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
+    method: "PUT",
+    body: JSON.stringify({ enabled: false, token: REAL_TOKEN, accessToken: REAL_TOKEN }),
+  });
+  const cfg1 = await api(a.cookie, "/api/channels");
+  ok("GET /api/channels never leaks the hub token",
+    cfg1.removed-chat-bridge?.token === "••••••" && cfg1.removed-chat-bridge?.accessToken === "••••••",
+    JSON.stringify(cfg1.removed-chat-bridge));
+  // the UI round-trip: putting the masked value back must keep the real one
+  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
+    method: "PUT",
+    body: JSON.stringify({ enabled: false, token: "••••••", accessToken: "••••••" }),
+  });
+  const cfg2 = await api(a.cookie, "/api/channels");
+  ok("masked echo-back does not clobber the stored secret", cfg2.removed-chat-bridge?.token === "••••••");
+  const leak2 = JSON.stringify(cfg2);
+  ok("second read still masked (real secret never in any response)", !leak2.includes(REAL_TOKEN));
+  // restore: off and secretless so other suites / the dev hub are unaffected
+  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
+    method: "PUT",
+    body: JSON.stringify({ enabled: false, token: "", accessToken: "" }),
+  });
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (fail > 0) process.exit(1);
   process.exit(0);
