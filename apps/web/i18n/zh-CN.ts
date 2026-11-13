@@ -548,17 +548,6 @@ const zhCN = {
   logout: "退出登录",
   hubMode: "服务器模式",
   localMode: "本机模式",
-  // connections
-  secConnections: "连接",
-  connectionsHint: "把伙伴接到聊天软件里",
-  removed-chat-bridgeTitle: "聊天软件（已移除的聊天软件桥接）",
-  removed-chat-bridgeDesc:
-    "支持 chat-bridge / chat-bridge / LL已移除的聊天软件桥接 等 已移除的聊天软件桥接 框架。在机器人端把 WebSocket 指向 Hub 的反向 WS 地址，即可让聊天软件里的消息由指定伙伴回复。",
-  removed-chat-bridgePeerPh: "user:12345 或 group:67890",
-  removed-chat-bridgePickAgent: "选择伙伴",
-  removed-chat-bridgeConnected: "已连接",
-  removed-chat-bridgeWaiting: "等待连接",
-  removed-chat-bridgeOff: "未启动",
   // server connection
   secServer: "服务器",
   serverHint: "连接你的 Myosotis Hub",

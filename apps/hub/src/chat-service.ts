@@ -1,8 +1,7 @@
 // ================================================================
 // Server-side chat orchestration — the heart of the hub.
 // Mirrors the web app's store.send() flow but persists through the
-// hub database and streams over SSE. Channel adapters (已移除的聊天软件桥接/chat-bridge)
-// and agent-tool bridges (claude/codex CLI) call into here too.
+// hub database and streams over SSE.
 // ================================================================
 import {
   buildContextMessages,

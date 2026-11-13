@@ -69,11 +69,6 @@ export class HubDB {
       CREATE TABLE IF NOT EXISTS settings (
         user_id TEXT PRIMARY KEY, data TEXT NOT NULL
       );
-      CREATE TABLE IF NOT EXISTS channel_bindings (
-        platform TEXT NOT NULL, channel_user_id TEXT NOT NULL,
-        user_id TEXT NOT NULL, agent_id TEXT NOT NULL,
-        PRIMARY KEY (platform, channel_user_id)
-      );
       CREATE TABLE IF NOT EXISTS hub_meta (
         key TEXT PRIMARY KEY, value TEXT NOT NULL
       );
@@ -258,33 +253,6 @@ export class HubDB {
     return out;
   }
 
-  // ---------------- channel bindings ----------------
-  getBinding(platform: string, channelUserId: string): { userId: string; agentId: string } | undefined {
-    const row = this.db
-      .prepare("SELECT user_id, agent_id FROM channel_bindings WHERE platform = ? AND channel_user_id = ?")
-      .get(platform, channelUserId) as any;
-    return row ? { userId: row.user_id, agentId: row.agent_id } : undefined;
-  }
-
-  putBinding(platform: string, channelUserId: string, userId: string, agentId: string) {
-    this.db
-      .prepare(
-        `INSERT INTO channel_bindings (platform, channel_user_id, user_id, agent_id) VALUES (?,?,?,?)
-         ON CONFLICT(platform, channel_user_id) DO UPDATE SET user_id = excluded.user_id, agent_id = excluded.agent_id`
-      )
-      .run(platform, channelUserId, userId, agentId);
-  }
-
-  deleteBinding(platform: string, channelUserId: string) {
-    this.db.prepare("DELETE FROM channel_bindings WHERE platform = ? AND channel_user_id = ?").run(platform, channelUserId);
-  }
-
-  listBindings(userId: string): Array<{ platform: string; channelUserId: string; agentId: string }> {
-    return (this.db
-      .prepare("SELECT platform, channel_user_id, agent_id FROM channel_bindings WHERE user_id = ?")
-      .all(userId) as any[]).map((r) => ({ platform: r.platform, channelUserId: r.channel_user_id, agentId: r.agent_id }));
-  }
-
   // ---------------- meta ----------------
   getMeta(key: string): string | undefined {
     const row = this.db.prepare("SELECT value FROM hub_meta WHERE key = ?").get(key) as any;
@@ -305,8 +273,7 @@ export class HubDB {
 // a module-level slot: chat turns are long async pipelines
 // (summarize → stream → fire-and-forget extraction), so a shared
 // mutable slot would leak one tenant's memories into another's turn
-// whenever requests interleave. Channel adapters (已移除的聊天软件桥接) never pass
-// through HTTP auth and run their turns with runWithUser() directly.
+// whenever requests interleave.
 // ---------------------------------------------------------------
 
 const userScope = new AsyncLocalStorage<string>();

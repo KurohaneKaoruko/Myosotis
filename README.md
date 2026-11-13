@@ -2,7 +2,7 @@
 
 > 不准忘记我。
 
-一套**多端**的 AI 陪伴聊天系统：服务器核心（Hub）承载记忆、模型调用与聊天软件接入，
+一套**多端**的 AI 陪伴聊天系统：服务器核心（Hub）承载记忆与模型调用，
 桌面端 / 移动端 / 浏览器端都是它的客户端。
 
 ```
@@ -10,14 +10,12 @@
    浏览器 (Web) ───▶│                                          │
    桌面 (Tauri) ───▶│            Myosotis Hub                  │
    移动 (Tauri) ───▶│  鉴权 · 会话 · 记忆引擎 · 模型调用      │
-                    │  SSE 流式 · 已移除的聊天软件桥接 适配 · 多端实时同步    │
+                    │  SSE 流式 · 多端实时同步                 │
                     └───────────────┬──────────────────────────┘
                                     │
-                    ┌───────────────┴──────────────────────────┐
-                    ▼                   ▼
-              模型服务商          QQ/聊天软件
-              (OpenAI/Anthropic  (chat-bridge · 已移除的聊天软件桥接)
-               /Gemini 兼容)
+                                    ▼
+                               模型服务商
+                     (OpenAI/Anthropic/Gemini 兼容)
 ```
 
 ## 特性
@@ -28,8 +26,7 @@
 | 🪻 **多伙伴** | 多个智能体（不同人设/口吻/模型），支持多人群聊圆桌、剧情模式 |
 | 🔐 **服务器鉴权** | scrypt 口令哈希 + 会话 Cookie + 可选 TOTP 两步验证；首个账号自助注册 |
 | 💬 **多端一致** | Web / 桌面 / 移动共享同一份数据与记忆；本机模式依然可用（离线优先） |
-| 🔌 **聊天软件接入** | 已移除的聊天软件桥接 协议适配（chat-bridge / chat-bridge / LL已移除的聊天软件桥接），私聊直回、群聊 @触发、图片走视觉模型 |
-| 📡 **多协议模型** | OpenAI 兼容（DeepSeek / Kimi / 智谱 / OpenRouter / Ollama…）、Anthropic、Gemini |
+| 🔌 **多协议模型** | OpenAI 兼容（DeepSeek / Kimi / 智谱 / OpenRouter / Ollama…）、Anthropic、Gemini |
 | 🗣 **语音** | 系统朗读与识别（零配置），可配置云端 TTS/STT |
 | 🎨 **主题** | 7 套主题色 × 明暗模式 × 聊天背景 |
 
@@ -45,7 +42,6 @@ Myosotis-Chat/
 │  │  ├─ src/db.ts         数据库 + 存储端口
 │  │  ├─ src/auth.ts       scrypt / 会话 / TOTP
 │  │  ├─ src/chat-service.ts  聊天编排（记忆检索→摘要→生成→抽取）
-│  │  ├─ src/adapter-removed-chat-bridge.ts  已移除的聊天软件桥接 适配器
 │  │  ├─ src/events.ts      实时事件总线（多端同步）
 │  │  └─ src/index.ts       路由、鉴权中间件、SSE、静态托管
 │  ├─ web/               浏览器端（React 19 + Vite），同时被桌面/移动壳复用
@@ -135,24 +131,6 @@ pnpm test
 | `MYO_LOGIN_RATE_WINDOW_MS` | `60000` | 滑动窗口长度（毫秒） |
 | `MYO_LOGIN_RATE_LOCKOUT_MS` | `30000` | 首次锁定时长（毫秒），之后指数翻倍 |
 | `MYO_LOGIN_RATE_MAX_LOCKOUT_MS` | `900000` | 锁定时长上限（毫秒，默认 15 分钟） |
-| `REMOVED_CHAT_BRIDGE_ENABLED` | `0` | 是否启用 已移除的聊天软件桥接 适配器 |
-| `REMOVED_CHAT_BRIDGE_MODE` | `reverse` | `reverse`（chat-bridge 主动连我们）/ `forward`（我们连 chat-bridge） |
-| `REMOVED_CHAT_BRIDGE_LISTEN_PORT` | `8081` | reverse 模式监听端口 |
-| `REMOVED_CHAT_BRIDGE_ACCESS_TOKEN` | — | reverse 模式校验用 token（chat-bridge 用 `?access-token=` 传） |
-| `REMOVED_CHAT_BRIDGE_URL` | — | forward 模式的 ws 地址，如 `ws://127.0.0.1:3001` |
-| `REMOVED_CHAT_BRIDGE_TOKEN` | — | forward 模式的鉴权 token |
-
-## 接入聊天软件（chat-bridge / 已移除的聊天软件桥接）
-
-1. 在 chat-bridge 中启用 已移除的聊天软件桥接 反向 WebSocket，地址填 `ws://<hub>:8081`
-   （若设置了 `REMOVED_CHAT_BRIDGE_ACCESS_TOKEN`，地址写成 `ws://<hub>:8081?access-token=<token>`）。
-2. 在 Web 端「设置 → 连接」里为聊天对象建立绑定：
-   - 私聊：`user:20002`
-   - 群聊：`group:30003`
-   - 绑定后指定由哪位伙伴回复。
-3. 群里 `@机器人` 即可对话；未绑定会收到提示。
-
-也可在「设置 → 连接」里直接改适配器运行参数（模式、地址、端口、token），无需重启。
 
 ## 安全说明
 

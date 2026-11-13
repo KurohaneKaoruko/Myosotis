@@ -727,7 +727,7 @@ button {
   text-align: left;
   position: relative;
 }
-/* QQ-style bubble tails */
+/* chat bubble tails */
 .msg.ai .bubble::after {
   content: "";
   position: absolute;

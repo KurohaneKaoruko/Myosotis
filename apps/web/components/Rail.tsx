@@ -8,7 +8,7 @@ const RAIL_ITEMS: { view: string; icon: IconName; labelKey: "navChat" | "navMemo
   { view: "settings", icon: "settings", labelKey: "navSettings" },
 ];
 
-/** Narrow icon rail, desktop-style-style. Desktop only (hidden on mobile via CSS). */
+/** Narrow icon rail. Desktop only (hidden on mobile via CSS). */
 export default function Rail() {
   const view = useStore((s) => s.view);
   const setView = useStore((s) => s.setView);

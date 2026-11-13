@@ -530,17 +530,6 @@ const en: Partial<Dict> = {
   logout: "Sign out",
   hubMode: "Server mode",
   localMode: "Local mode",
-  // connections
-  secConnections: "Connections",
-  connectionsHint: "Bring your companions into chat apps",
-  removed-chat-bridgeTitle: "Chat software (已移除的聊天软件桥接)",
-  removed-chat-bridgeDesc:
-    "Works with chat-bridge / chat-bridge / LL已移除的聊天软件桥接 and other 已移除的聊天软件桥接 frameworks. Point the bot's WebSocket at the hub's reverse WS address and a chosen companion replies to those chats.",
-  removed-chat-bridgePeerPh: "user:12345 or group:67890",
-  removed-chat-bridgePickAgent: "Pick a companion",
-  removed-chat-bridgeConnected: "Connected",
-  removed-chat-bridgeWaiting: "Waiting",
-  removed-chat-bridgeOff: "Not running",
   // server connection
   secServer: "Server",
   serverHint: "Connect to your Myosotis hub",

@@ -94,7 +94,7 @@ export function signUploadPathsForUser(
     if (!UPLOAD_NAME_RE.test(name)) continue;
     // ownership: the file name must appear in one of this tenant's
     // messages. Message JSON stores the full path in quotes
-    // ("/uploads/<name>" — or the absolute 已移除的聊天软件桥接 variant), so the
+    // ("/uploads/<name>" or the absolute variant), so the
     // name always sits right before a closing quote; match `name"`.
     const row = db.raw
       .prepare(

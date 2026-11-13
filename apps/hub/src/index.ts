@@ -1,7 +1,7 @@
 // ================================================================
 // Myosotis Hub — the server core.
-// Serves the web app, the REST/SSE API, channel adapters and the
-// agent-tool bridge. Everything runs here; clients are shells.
+// Serves the web app and the REST/SSE API. Everything runs here;
+// clients are shells.
 // ================================================================
 import Fastify from "fastify";
 import fastifyCookie from "@fastify/cookie";
@@ -24,8 +24,6 @@ import {
   totpUri,
 } from "./auth.ts";
 import { runSingleTurn, runGroupTurn, listMessages } from "./chat-service.ts";
-import { createRemovedChatBridgeAdapter } from "./adapter-removed-chat-bridge.ts";
-import { ChannelManager } from "./channels.ts";
 import { bus } from "./events.ts";
 import { UploadStore, MAX_UPLOAD_BYTES } from "./uploads.ts";
 import {
@@ -673,55 +671,6 @@ app.post("/api/chat/stop", async (req: any, res: any) => {
 });
 
 // ----------------------------------------------------------------
-// channel bindings (已移除的聊天软件桥接 / chat-bridge)
-// ----------------------------------------------------------------
-app.get("/api/channels", async (req: any) => {
-  return { bindings: db.listBindings(req.userId), removed-chat-bridge: channels.status() };
-});
-
-app.put("/api/channels/removed-chat-bridge", async (req: any, res: any) => {
-  const { platformUserId, agentId, replace } = req.body ?? {};
-  if (!platformUserId?.trim() || !agentId) return res.status(400).send({ error: "missing-fields" });
-  // the bound agent must belong to the caller
-  if (!db.ownsRow(req.userId, "agents", String(agentId))) return res.status(404).send({ error: "no-agent" });
-  const key = String(platformUserId).trim();
-  // a channel id already bound to someone else may not be silently taken
-  // over — the caller must pass replace:true (the delete-then-rebind flow)
-  const existing = db.getBinding("removed-chat-bridge", key);
-  if (existing && existing.userId !== req.userId && !replace) {
-    return res.status(409).send({ error: "already-bound" });
-  }
-  db.putBinding("removed-chat-bridge", key, req.userId, String(agentId));
-  return { ok: true };
-});
-
-app.delete("/api/channels/removed-chat-bridge/:key", async (req: any, res: any) => {
-  const binding = db.getBinding("removed-chat-bridge", req.params.key);
-  // you can only remove your own bindings
-  if (binding && binding.userId !== req.userId) return res.status(404).send({ error: "not-found" });
-  db.deleteBinding("removed-chat-bridge", req.params.key);
-  return { ok: true };
-});
-
-// runtime configuration of the 已移除的聊天软件桥接 adapter (restart-free).
-// The config is hub-global infrastructure, not per-tenant data; the
-// masked values returned by GET are never re-persisted (sending
-// "••••••" back keeps the real secret).
-app.put("/api/channels/removed-chat-bridge/config", async (req: any, res: any) => {
-  const body = req.body ?? {};
-  const patch: any = {};
-  const MASK = "••••••";
-  if (typeof body.enabled === "boolean") patch.enabled = body.enabled;
-  if (body.mode === "forward" || body.mode === "reverse") patch.mode = body.mode;
-  if (typeof body.url === "string") patch.url = body.url;
-  if (typeof body.token === "string" && body.token !== MASK) patch.token = body.token;
-  if (typeof body.accessToken === "string" && body.accessToken !== MASK) patch.accessToken = body.accessToken;
-  if (body.listenPort != null) patch.listenPort = Number(body.listenPort);
-  if (typeof body.streaming === "boolean") patch.streaming = body.streaming;
-  return { ok: true, removed-chat-bridge: await channels.update(patch) };
-});
-
-// ----------------------------------------------------------------
 // image uploads (content-addressed files on disk)
 // ----------------------------------------------------------------
 app.post("/api/upload", async (req: any, res: any) => {
@@ -798,9 +747,6 @@ if (existsSync(WEB_DIST)) {
 // ----------------------------------------------------------------
 // boot
 // ----------------------------------------------------------------
-const channels = new ChannelManager(db, loadEntities);
-await channels.init();
-
 db.deleteExpiredSessions();
 setInterval(() => db.deleteExpiredSessions(), 6 * 3600_000).unref();
 
@@ -816,6 +762,4 @@ app.listen({ port: PORT, host: HOST }).then(() => {
   console.log(`Myosotis Hub 0.3.0 listening on http://${HOST}:${PORT}`);
   console.log(`  data dir: ${DATA_DIR}`);
   console.log(`  web dist: ${WEB_DIST}${existsSync(WEB_DIST) ? "" : " (missing — build the web app first)"}`);
-  const st = channels.status();
-  console.log(`  removed-chat-bridge: ${st.enabled ? `${st.mode} mode` : "disabled"}`);
 });

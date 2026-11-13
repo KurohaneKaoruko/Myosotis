@@ -4,7 +4,6 @@ import { useStore } from "../store";
 import { db } from "../lib/db";
 import { listRemoteModels, probeProvider, probeModel, type ProbeResult } from "@myosotis/core";
 import { friendlyError } from "@myosotis/core";
-import ConnectionsCard from "./ConnectionsCard";
 import ServerCard from "./ServerCard";
 import { Modal, Icon, SelectBox, Toggle, SliderRow } from "./ui";
 import { DEFAULT_SETTINGS, type PromptTemplate } from "@myosotis/core";
@@ -106,7 +105,6 @@ export default function SettingsView() {  return (
         <PromptCard />
         <ProfileCard />
         <ServerCard />
-        <ConnectionsCard />
         <BackupCard />
         <DataCard />
         <div className="card" style={{ textAlign: "center", color: "var(--text-3)", fontSize: 12, lineHeight: 1.9 }}>

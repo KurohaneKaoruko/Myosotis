@@ -1,5 +1,5 @@
 // Guards regression test: message routes must respect conversation
-// membership, and 已移除的聊天软件桥接 channel ids must not be silently taken over.
+// membership and tenant ownership across the hub API.
 //
 //   node --experimental-strip-types test/guards.test.ts
 import { DatabaseSync } from "node:sqlite";
@@ -67,7 +67,6 @@ async function main() {
   // plain pB/mB/agB ids, and data rows are global-id
   const tag = Date.now().toString(36);
   const agentB = `gagB${tag}`;
-  const channelB = `9${tag}9`;
 
   const convoA = await api(a.cookie, "/api/conversations", {
     method: "POST",
@@ -134,9 +133,8 @@ async function main() {
   ok("legit PUT still works",
     edit.ok !== false && Array.isArray(edited) && edited.find((m: any) => m.id === target.id)?.content === "守卫测试消息（已编辑）");
 
-  console.log("== 2. removed-chat-bridge binding cannot be silently taken over ==");
-  // B seeds its own agent first (its binding attempt must pass the
-  // agent-ownership check and fail on the takeover check instead)
+  console.log("== 2. story mode must not inject another tenant's scenario ==");
+  // B seeds its own agent (the story conversation below needs it)
   const seedB = await api(cookieB, `/api/data/agents/${agentB}`, {
     method: "PUT",
     body: JSON.stringify({
@@ -145,47 +143,6 @@ async function main() {
     }),
   });
   if (!seedB.ok) throw new Error("seed B agent failed");
-
-  // A binds its channel id to its agent
-  const bindA = await api(a.cookie, "/api/channels/removed-chat-bridge", {
-    method: "PUT",
-    body: JSON.stringify({ platformUserId: channelB, agentId: "ag1" }),
-  });
-  ok("A binds its channel id", bindA.ok !== false, JSON.stringify(bindA));
-
-  // B binding the same channel id must be rejected (409)
-  const steal = await fetch(`${API}/api/channels/removed-chat-bridge`, {
-    method: "PUT",
-    headers: { "content-type": "application/json", cookie: cookieB },
-    body: JSON.stringify({ platformUserId: channelB, agentId: agentB }),
-  });
-  ok("B cannot bind someone else's channel id", steal.status === 409, `status=${steal.status}`);
-  const bindingsA = await api(a.cookie, "/api/channels");
-  const owner = Array.isArray(bindingsA?.bindings)
-    ? bindingsA.bindings.find((b: any) => b.channelUserId === channelB)
-    : null;
-  ok("binding still owned by A", !!owner && owner.agentId === "ag1", JSON.stringify(owner));
-
-  // the explicit replace flow still works
-  const del = await fetch(`${API}/api/channels/removed-chat-bridge/${channelB}`, {
-    method: "DELETE",
-    headers: { cookie: cookieB },
-  });
-  ok("DELETE on a foreign binding is refused", del.status === 404, `status=${del.status}`);
-  // …and the replace flag (documented takeover path) works
-  const takeover = await api(cookieB, "/api/channels/removed-chat-bridge", {
-    method: "PUT",
-    body: JSON.stringify({ platformUserId: channelB, agentId: agentB, replace: true }),
-  });
-  ok("explicit replace:true takes the binding over", takeover.ok !== false, JSON.stringify(takeover));
-  const bindingsAfter = await api(a.cookie, "/api/channels");
-  ok("A no longer lists the binding after explicit replace",
-    Array.isArray(bindingsAfter?.bindings) && !bindingsAfter.bindings.some((b: any) => b.channelUserId === channelB));
-
-  // cleanup: unbind so other suites are unaffected
-  await api(cookieB, `/api/channels/removed-chat-bridge/${channelB}`, { method: "DELETE" });
-
-  console.log("== 3. story mode must not inject another tenant's scenario ==");
   // A owns a secret scenario; B points its own story conversation at it
   await api(a.cookie, "/api/data/scenarios/scn_secret", {
     method: "PUT",
@@ -233,32 +190,7 @@ async function main() {
   ok("foreign scenario content never reaches the model",
     bTurn.length > 0 && !bTurn.includes("机密标记XYZ") && !bTurn.includes("绝密开场"));
 
-  console.log("== 4. 已移除的聊天软件桥接 hub config: secrets masked, never clobbered by masks ==");
-  const REAL_TOKEN = "hub-secret-token-xyz";
-  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
-    method: "PUT",
-    body: JSON.stringify({ enabled: false, token: REAL_TOKEN, accessToken: REAL_TOKEN }),
-  });
-  const cfg1 = await api(a.cookie, "/api/channels");
-  ok("GET /api/channels never leaks the hub token",
-    cfg1.removed-chat-bridge?.token === "••••••" && cfg1.removed-chat-bridge?.accessToken === "••••••",
-    JSON.stringify(cfg1.removed-chat-bridge));
-  // the UI round-trip: putting the masked value back must keep the real one
-  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
-    method: "PUT",
-    body: JSON.stringify({ enabled: false, token: "••••••", accessToken: "••••••" }),
-  });
-  const cfg2 = await api(a.cookie, "/api/channels");
-  ok("masked echo-back does not clobber the stored secret", cfg2.removed-chat-bridge?.token === "••••••");
-  const leak2 = JSON.stringify(cfg2);
-  ok("second read still masked (real secret never in any response)", !leak2.includes(REAL_TOKEN));
-  // restore: off and secretless so other suites / the dev hub are unaffected
-  await api(a.cookie, "/api/channels/removed-chat-bridge/config", {
-    method: "PUT",
-    body: JSON.stringify({ enabled: false, token: "", accessToken: "" }),
-  });
-
-  console.log("== 5. message JSON conversationId must match the URL ==");
+  console.log("== 3. message JSON conversationId must match the URL ==");
   // POST with a body pointing somewhere else must be rejected outright
   const mismatch = await fetch(`${API}/api/conversations/${convoA.id}/messages`, {
     method: "POST",

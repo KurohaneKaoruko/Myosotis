@@ -199,7 +199,7 @@ async function main() {
   const convoStill = await api(a.cookie, `/api/conversations/${convoA.id}/messages`);
   ok("A's messages intact", Array.isArray(convoStill) && convoStill.some((m: any) => m.content === "只有A能看到"));
 
-  console.log("== 4. memories & channel bindings are private ==");
+  console.log("== 4. memories are private ==");
   await api(a.cookie, "/api/data/memories/memIso", {
     method: "PUT",
     body: JSON.stringify({
@@ -209,22 +209,6 @@ async function main() {
   });
   const memsB = await api(cookieB, "/api/memories");
   ok("B cannot list A's memories", !Array.isArray(memsB) || !memsB.some((m: any) => m.id === "memIso"));
-
-  const bindB = await api(cookieB, "/api/channels/removed-chat-bridge", {
-    method: "PUT",
-    body: JSON.stringify({ platformUserId: "user:777", agentId: "ag1" }),
-  });
-  ok("B cannot bind A's agent (404)", bindB.status === 404 || bindB.error === "no-agent", JSON.stringify(bindB).slice(0, 80));
-
-  // A binds its own agent; B must not remove that binding
-  await api(a.cookie, "/api/channels/removed-chat-bridge", {
-    method: "PUT",
-    body: JSON.stringify({ platformUserId: "user:888", agentId: "ag1" }),
-  });
-  const unbindB = await api(cookieB, "/api/channels/removed-chat-bridge/user%3A888", { method: "DELETE" });
-  ok("B cannot remove A's binding (404)", unbindB.status === 404 || unbindB.error === "not-found", JSON.stringify(unbindB).slice(0, 80));
-  const bindingsA = await api(a.cookie, "/api/channels");
-  ok("A's binding survives", bindingsA.bindings?.some((b: any) => b.channelUserId === "user:888"));
 
   console.log("== 5. sync events: settings & conversations ==");
   const subA = await subscribe(a.cookie);
