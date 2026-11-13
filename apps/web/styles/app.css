@@ -3065,6 +3065,10 @@ textarea.input {
     flex: 1;
     width: 100%;
     min-width: 0;
+    /* flex-column children default to min-height:auto — without this the
+       settings/memory page grows unbounded and pushes the tabbar off-screen */
+    min-height: 0;
+    overflow: hidden;
   }
   /* conversation list becomes a full-width drawer over the main area */
   .sidebar {
@@ -3188,6 +3192,24 @@ textarea.input {
   }
   .suggests {
     margin-left: 0;
+  }
+  /* landscape phones: keep navigation reachable but slim (Telegram-style) */
+  @media (max-height: 480px) {
+    .tabbar {
+      padding: 2px 8px calc(2px + env(safe-area-inset-bottom));
+    }
+    .tabbar .nav-item {
+      flex-direction: row;
+      gap: 6px;
+      padding: 4px 0;
+    }
+    .tabbar .nav-item svg {
+      width: 18px;
+      height: 18px;
+    }
+    .page {
+      padding-bottom: 20px;
+    }
   }
 }
 

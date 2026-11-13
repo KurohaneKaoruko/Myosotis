@@ -734,8 +734,26 @@ if (existsSync(WEB_DIST)) {
     },
   });
   app.setNotFoundHandler((req, res) => {
-    const p = path.join(WEB_DIST, "index.html");
     if (req.url.startsWith("/api/")) return res.status(404).send({ error: "not-found" });
+    // hashed assets must never fall back to index.html: a stale route table
+    // (hub started before a rebuild) would serve HTML as JS and blank the app
+    if (req.url.startsWith("/assets/")) {
+      // serve from disk if the file appeared after boot (dev/rolling-deploy flow)
+      const p = path.join(WEB_DIST, decodeURIComponent(req.url.split("?")[0]));
+      if (existsSync(p) && statSync(p).isFile()) {
+        const ext = path.extname(p);
+        const type =
+          ext === ".js" ? "application/javascript; charset=utf-8"
+          : ext === ".css" ? "text/css; charset=utf-8"
+          : ext === ".svg" ? "image/svg+xml"
+          : ext === ".html" ? "text/html; charset=utf-8"
+          : "application/octet-stream";
+        res.type(type).header("Cache-Control", "public, max-age=31536000, immutable");
+        return res.send(createReadStream(p));
+      }
+      return res.status(404).send({ error: "asset-not-found" });
+    }
+    const p = path.join(WEB_DIST, "index.html");
     if (existsSync(p)) {
       res.type("text/html").header("Cache-Control", "no-cache");
       return res.send(createReadStream(p));
