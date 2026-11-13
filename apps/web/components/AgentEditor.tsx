@@ -207,7 +207,7 @@ function EditorBody({ agentId }: { agentId: string }) {
             width: 68,
             height: 68,
             borderRadius: 22,
-            background: `linear-gradient(135deg, hsl(${form.hue} 70% 55%), hsl(${(form.hue + 40) % 360} 70% 45%))`,
+            background: `linear-gradient(135deg, hsl(${form.hue} 62% 58%), hsl(${(form.hue + 40) % 360} 58% 46%))`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -231,7 +231,7 @@ function EditorBody({ agentId }: { agentId: string }) {
               min={0}
               max={359}
               value={form.hue ?? 260}
-              style={{ width: "100%", accentColor: `hsl(${form.hue} 70% 55%)` }}
+              style={{ width: "100%", accentColor: `hsl(${form.hue} 62% 58%)` }}
               onChange={(e) => set({ hue: Number(e.target.value) })}
             />
           </div>

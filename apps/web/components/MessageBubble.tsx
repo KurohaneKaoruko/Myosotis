@@ -284,7 +284,7 @@ export default function MessageBubble({
           <div
             className="ava"
             style={{
-              background: `linear-gradient(135deg, hsl(${agent.hue} 70% 55%), hsl(${(agent.hue + 40) % 360} 70% 45%))`,
+              background: `linear-gradient(135deg, hsl(${agent.hue} 62% 58%), hsl(${(agent.hue + 40) % 360} 58% 46%))`,
             }}
           >
             {agent.emoji}

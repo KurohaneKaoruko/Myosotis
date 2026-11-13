@@ -509,7 +509,7 @@ export default function Composer() {
                   <span
                     className="mi-ava"
                     style={{
-                      background: `linear-gradient(135deg, hsl(${a.hue} 70% 55%), hsl(${(a.hue + 40) % 360} 70% 45%))`,
+                      background: `linear-gradient(135deg, hsl(${a.hue} 62% 58%), hsl(${(a.hue + 40) % 360} 58% 46%))`,
                     }}
                   >
                     {a.emoji}
