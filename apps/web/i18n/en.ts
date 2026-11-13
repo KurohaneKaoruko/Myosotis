@@ -21,6 +21,10 @@ const en: Partial<Dict> = {
   speakFailed: "Read-aloud failed",
 
   pickConversation: "Pick a conversation to start chatting",
+  tipSlash: 'Type "/" for quick commands',
+  tipDropImage: "Drop images to send",
+  tipVoice: "Hold the mic to talk",
+  dataSynced: "Synced across your devices",
   pickMobile: "Tap the Chats tab below to see conversations",
   pickDesktop: "Pick one from the list on the left",
   noAgentsTitle: "No agents yet",
@@ -69,7 +73,7 @@ const en: Partial<Dict> = {
   undoDone: "Undid {n} messages",
   nothingToUndo: "Nothing to undo",
 
-  inputPh: "Type a message — paste or drop images…",
+  inputPh: "Type a message…",
   sendImg: "Send image (needs a vision model)",
   noVision: "No vision model configured, images unavailable",
   voiceModeOn: "Exit voice chat mode",

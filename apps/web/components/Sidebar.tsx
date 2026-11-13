@@ -5,6 +5,7 @@ import GroupEditor from "./GroupEditor";
 import { t, tf } from "../i18n";
 import { formatTime, plainPreview } from "@myosotis/core";
 import { allDrafts } from "../lib/drafts";
+import { getDbMode } from "../lib/db";
 import SearchResults from "./SearchResults";
 import type { Agent, Conversation } from "@myosotis/core";
 
@@ -502,7 +503,7 @@ export default function Sidebar() {
       )}
 
       <div className="sidebar-foot">
-        <span>🔒 {t("dataLocalOnly")}</span>
+        <span>{getDbMode() === "remote" ? `☁️ ${t("dataSynced")}` : `🔒 ${t("dataLocalOnly")}`}</span>
       </div>
 
       {tagging && (

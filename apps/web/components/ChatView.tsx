@@ -153,9 +153,10 @@ export default function ChatView() {
     const noAgents = agents.length === 0;
     return (
       <div className="empty-chat">
+        <div className="ec-halo" aria-hidden />
         <div className="big">🌸</div>
         <div className="t">{noAgents ? t("noAgentsTitle") : t("pickConversation")}</div>
-        <div style={{ fontSize: 13, marginBottom: 18 }}>
+        <div className="d">
           {noAgents
             ? t("noAgentsDesc")
             : window.innerWidth <= 768
@@ -166,6 +167,13 @@ export default function ChatView() {
           <button className="btn primary" onClick={() => useStore.getState().createAgent()}>
             {t("createAgent")}
           </button>
+        )}
+        {!noAgents && (
+          <div className="ec-tips" aria-hidden>
+            <span>💡 {t("tipSlash")}</span>
+            <span>📎 {t("tipDropImage")}</span>
+            <span>🎙️ {t("tipVoice")}</span>
+          </div>
         )}
       </div>
     );
@@ -255,14 +263,9 @@ export default function ChatView() {
               ]}
             />
           ) : (
-            <div
-              className="sub"
-              style={{ color: "#f59e0b", cursor: "pointer" }}
-              onClick={() => useStore.getState().setView("settings")}
-              title={t("goSettings")}
-            >
+            <button className="model-warn" onClick={() => useStore.getState().setView("settings")} title={t("goSettings")}>
               {t("unconfiguredModel")}
-            </div>
+            </button>
           )}
         </div>
         <div className="spacer" />

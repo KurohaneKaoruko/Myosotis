@@ -22,6 +22,10 @@ const zhCN = {
 
   // chat view
   pickConversation: "选择一个对话，开始聊天",
+  tipSlash: "输入 / 唤起快捷指令",
+  tipDropImage: "拖入图片直接发送",
+  tipVoice: "按住麦克风语音输入",
+  dataSynced: "数据已同步，多端一致",
   pickMobile: "点击底部「聊天」标签查看对话",
   pickDesktop: "从左侧列表中选择",
   noAgentsTitle: "还没有智能体",
@@ -72,7 +76,7 @@ const zhCN = {
   nothingToUndo: "没有可撤销的对话",
 
   // composer
-  inputPh: "输入消息，可粘贴/拖入图片…",
+  inputPh: "输入消息…",
   sendImg: "发送图片（需要看图模型）",
   noVision: "尚未配置看图模型，图片功能不可用",
   voiceModeOn: "退出语音对话模式",
