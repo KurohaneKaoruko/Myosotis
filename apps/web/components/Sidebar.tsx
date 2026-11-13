@@ -153,28 +153,32 @@ export default function Sidebar() {
           <Icon name="search" size={15} />
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("searchPh")} />
         </div>
-        <TipFor text={t("newGroupBtn")}>
-          <button
-            className="new-btn"
-            onClick={() => {
-              useStore.getState().setSidebar(false);
-              openGroupEditor(null);
-            }}
-          >
-            <Icon name="agents" size={18} />
-          </button>
-        </TipFor>
-        <TipFor text={t("newAgentBtn")}>
-          <button
-            className="new-btn"
-            onClick={() => {
-              useStore.getState().setSidebar(false);
-              createAgent();
-            }}
-          >
-            <Icon name="plus" size={18} />
-          </button>
-        </TipFor>
+        <Menu
+          align="end"
+          trigger={
+            <button className="new-btn" title={t("newAgentBtn")}>
+              <Icon name="plus" size={19} />
+            </button>
+          }
+          items={[
+            {
+              label: t("newAgentBtn"),
+              icon: "agents" as const,
+              onClick: () => {
+                useStore.getState().setSidebar(false);
+                void createAgent();
+              },
+            },
+            {
+              label: t("newGroupBtn"),
+              icon: "chat" as const,
+              onClick: () => {
+                useStore.getState().setSidebar(false);
+                openGroupEditor(null);
+              },
+            },
+          ]}
+        />
       </div>
 
       <div className="filter-row">

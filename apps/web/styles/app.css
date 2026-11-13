@@ -240,6 +240,7 @@ button {
 }
 .list-head .search-box {
   flex: 1;
+  min-width: 0;
   margin: 0;
 }
 .filter-row {
