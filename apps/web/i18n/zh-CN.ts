@@ -91,6 +91,8 @@ const zhCN = {
   micDenied: "无法访问麦克风，请检查系统权限",
   sttFailed: "语音识别失败：",
   transcribing: "正在识别语音…",
+  recording: "松开或点「完成」结束录音，取消则丢弃",
+  recCancel: "取消",
   sendFirst: "还没有配置可用的对话模型，请先到「设置」添加模型",
 
   // agents view
@@ -231,6 +233,9 @@ const zhCN = {
   bgNone: "纯色",
   bgAurora: "极光",
   bgMesh: "渐变",
+  bgSakura: "樱花",
+  bgDusk: "暮色",
+  bgPaper: "素纸",
   bubbleStyle: "气泡风格",
   bubbleModern: "现代圆角",
   bubbleClassic: "经典直角",
@@ -244,6 +249,9 @@ const zhCN = {
   msgSoundDesc: "收到回复时播放轻柔提示音（WebAudio 合成，无额外资源）",
   desktopNotify: "桌面通知",
   desktopNotifyDesc: "切到后台时收到回复弹出系统通知，点击跳转到对应会话",
+  unreadDivider: "新消息",
+  unreadDividerTip: "点击关闭此提示",
+  typingNow: "正在输入…",
   secQuickCmds: "快捷指令",
   quickHint: "输入框输入 / 触发词 快速填入提示词",
   quickEmpty: "还没有指令。创建如触发词「周报」、内容「帮我写本周工作周报，格式：…」的指令，之后输入 /周报 即可填入。",

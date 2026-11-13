@@ -582,6 +582,9 @@ function AppearanceCard() {
             { id: "none", labelKey: "bgNone" as const },
             { id: "aurora", labelKey: "bgAurora" as const },
             { id: "mesh", labelKey: "bgMesh" as const },
+            { id: "sakura", labelKey: "bgSakura" as const },
+            { id: "dusk", labelKey: "bgDusk" as const },
+            { id: "paper", labelKey: "bgPaper" as const },
           ].map((w) => (
             <button key={w.id} className={`chip ${settings.wallpaper === w.id ? "on" : ""}`} onClick={() => setSettings({ wallpaper: w.id })}>
               {t(w.labelKey)}

@@ -33,6 +33,8 @@ export default function ChatView() {
   const streamingConvoId = useStore((s) => s.streamingConvoId);
   const streamingAgentId = useStore((s) => s.streamingAgentId);
   const streamText = useStore((s) => s.streamText);
+  const unreadMarker = useStore((s) => s.unreadMarker);
+  const clearUnreadMarker = useStore((s) => s.clearUnreadMarker);
   const models = useStore((s) => s.models);
   const providers = useStore((s) => s.providers);
   const settings = useStore((s) => s.settings);
@@ -220,6 +222,15 @@ export default function ChatView() {
           </div>
           {isGroup ? (
             <div className="sub">{tf("groupMembers", { n: groupAgents.length })}</div>
+          ) : isStreamingHere ? (
+            <div className="sub typing-status">
+              {t("typingNow")}
+              <span className="typing-dots" aria-hidden>
+                <i />
+                <i />
+                <i />
+              </span>
+            </div>
           ) : chatRm && agent ? (
             <Menu
               align="start"
@@ -423,6 +434,15 @@ export default function ChatView() {
             return (
               <Fragment key={m.id}>
                 {showDate && <div className="date-chip">{dateLabel(m.createdAt)}</div>}
+                {unreadMarker === m.id && (
+                  <button
+                    className="unread-divider"
+                    onClick={() => clearUnreadMarker()}
+                    title={t("unreadDividerTip")}
+                  >
+                    <span>{t("unreadDivider")}</span>
+                  </button>
+                )}
                 <div
                   data-msg-id={m.id}
                   className={multiSelectIds.includes(m.id) ? "msg-selected" : undefined}

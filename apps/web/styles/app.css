@@ -540,6 +540,24 @@ button {
     linear-gradient(135deg, var(--accent-soft) 0%, transparent 35%, transparent 65%, var(--accent-soft) 100%),
     var(--bg);
 }
+.main[data-wallpaper="sakura"] {
+  background:
+    radial-gradient(760px 480px at 16% -8%, rgb(244 143 177 / 0.16), transparent 62%),
+    radial-gradient(620px 420px at 108% 34%, rgb(206 147 216 / 0.12), transparent 58%),
+    var(--bg);
+}
+.main[data-wallpaper="dusk"] {
+  background:
+    linear-gradient(180deg, rgb(94 53 177 / 0.09), transparent 42%),
+    radial-gradient(900px 520px at 82% 112%, rgb(255 112 67 / 0.09), transparent 62%),
+    var(--bg);
+}
+.main[data-wallpaper="paper"] {
+  background:
+    radial-gradient(color-mix(in srgb, var(--text) 3.2%, transparent) 1px, transparent 1.4px),
+    var(--bg);
+  background-size: 22px 22px;
+}
 
 /* ============================================================
    Chat header
@@ -1705,6 +1723,131 @@ button {
   text-align: center;
   box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
   animation: badge-pop 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+
+/* header "typing…" status — replaces the model label while streaming */
+.typing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent);
+  animation: typing-fade 0.3s var(--ease-out);
+}
+/* compact dots inside the header (no bubble chrome) */
+.typing-status .typing-dots {
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  gap: 3px;
+}
+.typing-status .typing-dots i {
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+}
+@keyframes typing-fade {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+/* Telegram-style unread divider between messages */
+.unread-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 10px 0;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--danger);
+  animation: typing-fade 0.3s var(--ease-out);
+}
+.unread-divider::before,
+.unread-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--danger) 38%, transparent);
+}
+.unread-divider span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  transition: background var(--dur-fast) var(--ease);
+}
+.unread-divider:hover span {
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+}
+
+/* composer recording bar: pulsing dot + elapsed time + cancel */
+.rec-bar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 2px 8px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 22%, transparent);
+  animation: typing-fade 0.22s var(--ease-out);
+}
+.rec-bar .rec-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: rec-pulse 1.15s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes rec-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgb(239 68 68 / 0.35);
+  }
+  50% {
+    opacity: 0.55;
+    box-shadow: 0 0 0 5px rgb(239 68 68 / 0.12);
+  }
+}
+.rec-bar .rec-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--danger);
+}
+.rec-bar .rec-hint {
+  flex: 1;
+  font-size: 11.5px;
+  color: var(--text-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rec-bar .rec-cancel {
+  border: none;
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease);
+}
+.rec-bar .rec-cancel:hover {
+  background: color-mix(in srgb, var(--danger) 24%, transparent);
 }
 
 /* drag-drop mask */

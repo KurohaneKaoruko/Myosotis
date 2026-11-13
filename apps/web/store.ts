@@ -213,6 +213,13 @@ interface AppState {
   /** group chat: which participant is currently composing a reply */
   streamingAgentId: string | null;
   streamText: string;
+  /**
+   * Telegram-style "new messages" divider: the id of the first unread
+   * message, captured when a conversation with unread messages opens.
+   * Cleared once seen (message sent / divider clicked / convo switched).
+   */
+  unreadMarker: string | null;
+  clearUnreadMarker: () => void;
   /** true while images are being uploaded to the hub */
   uploadingImages: boolean;
   memoryAgentFilter: string | null;
@@ -345,6 +352,7 @@ export const useStore = create<AppState>()(
       streamingConvoId: null,
       streamingAgentId: null,
       streamText: "",
+      unreadMarker: null,
       uploadingImages: false,
       memoryAgentFilter: null,
       memoryRev: 0,
@@ -446,6 +454,10 @@ export const useStore = create<AppState>()(
         if (kind === "error") toast.error(text);
         else if (kind === "success") toast.success(text);
         else toast(text);
+      },
+
+      clearUnreadMarker() {
+        if (get().unreadMarker) set({ unreadMarker: null });
       },
 
       askConfirm(opts) {
@@ -708,7 +720,11 @@ export const useStore = create<AppState>()(
           messages = await db.messages.where("conversationId").equals(id).sortBy("createdAt");
         }
         messages.sort((a, b) => a.createdAt - b.createdAt);
-        set({ activeConvoId: id, messages, view: "chat", sidebarOpen: false });
+        // capture the Telegram-style "new messages" divider position before
+        // the unread count is cleared (the count itself lives on convos)
+        const unread = get().convos.find((c) => c.id === id)?.unread ?? 0;
+        const markerMsg = unread > 0 && messages.length >= unread ? messages[messages.length - unread] : null;
+        set({ activeConvoId: id, messages, view: "chat", sidebarOpen: false, unreadMarker: markerMsg?.id ?? null });
         // clear the unread badge (server-side, so all devices agree)
         if (getDbMode() === "remote") {
           clearUnread(id);
@@ -1030,6 +1046,7 @@ export const useStore = create<AppState>()(
         if (get().streamingConvoId) return;
         const convo = get().convos.find((c) => c.id === activeConvoId);
         if (!convo) return;
+        get().clearUnreadMarker(); // sending means the user is caught up
 
         // hub mode: the server runs the whole turn (persist + memory + stream)
         if (getDbMode() === "remote") {

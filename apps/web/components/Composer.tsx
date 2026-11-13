@@ -47,6 +47,8 @@ export default function Composer() {
   const [text, setText] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [listening, setListening] = useState(false);
+  // seconds elapsed since recording started (drives the recording bar)
+  const [recSeconds, setRecSeconds] = useState(0);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const sttRef = useRef<SttSession | null>(null);
@@ -171,6 +173,13 @@ export default function Composer() {
     if (draftConvoRef.current) setDraft(draftConvoRef.current, text);
   }, [text]);
 
+  // recording elapsed-time ticker (for the recording bar)
+  useEffect(() => {
+    if (!listening) return;
+    const iv = setInterval(() => setRecSeconds((s) => s + 1), 1000);
+    return () => clearInterval(iv);
+  }, [listening]);
+
   // images dropped onto the chat area land here
   useEffect(() => {
     if (pendingImages.length) {
@@ -245,6 +254,24 @@ export default function Composer() {
       recRef.current = null;
     }
     setListening(false);
+    setRecSeconds(0);
+  };
+
+  /** cancel: discard the recording instead of transcribing it */
+  const cancelListening = () => {
+    if (recRef.current) {
+      // swallow the transcription result of this recording
+      recRef.current.recorder.onstop = null;
+      try {
+        recRef.current.recorder.stream?.getTracks().forEach((t) => t.stop());
+      } catch {}
+      try {
+        recRef.current.recorder.stop();
+      } catch {}
+      recRef.current = null;
+    }
+    stopListening();
+    setText(baseTextRef.current); // drop any partial dictation
   };
 
   const stopInterruptListener = () => {
@@ -505,6 +532,18 @@ export default function Composer() {
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+          {listening && (
+            <div className="rec-bar">
+              <span className="rec-dot" aria-hidden />
+              <span className="rec-time">
+                {Math.floor(recSeconds / 60)}:{String(recSeconds % 60).padStart(2, "0")}
+              </span>
+              <span className="rec-hint">{t("recording")}</span>
+              <button className="rec-cancel" onClick={cancelListening}>
+                {t("recCancel")}
+              </button>
             </div>
           )}
           <textarea
