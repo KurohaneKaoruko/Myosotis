@@ -21,6 +21,8 @@ export default function App() {
   const providers = useStore((s) => s.providers);
   const settings = useStore((s) => s.settings);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
+  // subscribed here so the tab badge / document title react to live unread events
+  const convos = useStore((s) => s.convos);
   const init = useStore((s) => s.init);
   // hub mode gate: null = deciding, false = show login, true = session ok
   const [hubAuthed, setHubAuthed] = useState<boolean | null>(null);
@@ -65,6 +67,16 @@ export default function App() {
   useEffect(() => {
     applyTheme(settings);
   }, [settings.themeId, settings.themeMode, settings]);
+
+  // browser tab badge: total unread count, like mainstream chat apps
+  useEffect(() => {
+    const unread = convos.reduce((n, c) => n + (c.unread ?? 0), 0);
+    try {
+      (navigator as any).setAppBadge?.(unread > 0 ? unread : 0);
+      if (unread === 0) (navigator as any).clearAppBadge?.();
+    } catch {}
+    document.title = unread > 0 ? `(${unread}) Myosotis` : "Myosotis";
+  }, [convos]);
 
   // message font size as CSS var + i18n language sync + bubble style
   useEffect(() => {
@@ -243,8 +255,7 @@ function TabBar() {
   const setSidebar = useStore((s) => s.setSidebar);
   // subscribe so the unread dot reacts to live events
   const convos = useStore((s) => s.convos);
-  const unread = convos.reduce((n, c) => n + (c.unread ?? 0), 0);
-  return (
+  const unread = convos.reduce((n, c) => n + (c.unread ?? 0), 0);  return (
     <nav className="tabbar">
       {TABS.map((tab) => (
         <button

@@ -833,11 +833,13 @@ button {
   cursor: pointer;
   color: var(--text-3);
   font-size: 11px;
-  padding: 3px 8px;
+  width: 26px;
+  height: 24px;
+  padding: 0;
   border-radius: 7px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: center;
   transition:
     background var(--dur-fast) var(--ease),
     color var(--dur-fast) var(--ease);
@@ -1686,6 +1688,23 @@ button {
 .jump-btn:hover {
   transform: translateY(-2px);
   color: var(--accent);
+}
+.jump-btn .jump-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  animation: badge-pop 0.24s cubic-bezier(0.22, 1.4, 0.36, 1) both;
 }
 
 /* drag-drop mask */
@@ -3404,17 +3423,20 @@ pre[data-lang]::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-0, #131318);
+  background:
+    radial-gradient(900px 520px at 88% -12%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 62%),
+    var(--bg-deep);
   z-index: 200;
 }
 .login-card {
   width: min(360px, calc(100vw - 48px));
   padding: 36px 32px 30px;
   border-radius: 20px;
-  background: var(--bg-1, #1c1c24);
-  border: 1px solid var(--border-0, #2a2a35);
-  box-shadow: 0 18px 60px rgb(0 0 0 / 0.35);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
   text-align: center;
+  animation: view-in var(--dur-slow) var(--ease-out);
 }
 .login-logo {
   font-size: 44px;
@@ -3424,11 +3446,11 @@ pre[data-lang]::before {
 .login-card h1 {
   font-size: 22px;
   margin: 0 0 4px;
-  color: var(--text-1, #f2f2f7);
+  color: var(--text);
 }
 .login-sub {
   font-size: 13px;
-  color: var(--text-3, #9a9aa5);
+  color: var(--text-3);
   margin: 0 0 22px;
 }
 .login-card form {
@@ -3440,18 +3462,22 @@ pre[data-lang]::before {
   width: 100%;
   padding: 11px 14px;
   border-radius: 12px;
-  border: 1px solid var(--border-1, #33333f);
-  background: var(--bg-0, #131318);
-  color: var(--text-1, #f2f2f7);
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   font-size: 14px;
   outline: none;
   box-sizing: border-box;
+  transition:
+    border-color var(--dur-fast) var(--ease),
+    box-shadow var(--dur-fast) var(--ease);
 }
 .login-card input:focus {
-  border-color: var(--accent, #8b7bd8);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 .login-err {
-  color: #ff8a8a;
+  color: var(--danger);
   font-size: 12.5px;
   min-height: 16px;
 }
@@ -3460,11 +3486,18 @@ pre[data-lang]::before {
   padding: 11px;
   border-radius: 12px;
   border: none;
-  background: var(--accent, #8b7bd8);
-  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-contrast);
   font-size: 14.5px;
   font-weight: 600;
   cursor: pointer;
+  transition: filter var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+}
+.login-card button:hover:not(:disabled) {
+  filter: brightness(1.07);
+}
+.login-card button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 .login-card button:disabled {
   opacity: 0.55;

@@ -50,6 +50,15 @@ export default function MessageBubble({
   highlight?: string;
 }) {
   const [lightbox, setLightbox] = useState<string | null>(null);
+  // ESC closes the image lightbox (chat apps all do this)
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightbox]);
   const [speaking, setSpeaking] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
@@ -367,15 +376,16 @@ export default function MessageBubble({
             {actions
               .filter((a) => a.key !== "delete")
               .map((a) => (
-                <button key={a.key} onClick={a.run} title={a.label}>
-                  <Icon name={a.icon} size={12} /> {a.label}
+                <button key={a.key} onClick={a.run} title={a.label} aria-label={a.label}>
+                  <Icon name={a.icon} size={13} />
                 </button>
               ))}
             <button
               title={t("deleteMsg")}
+              aria-label={t("deleteMsg")}
               onClick={actions.find((a) => a.key === "delete")!.run}
             >
-              <Icon name="trash" size={12} /> {t("deleteMsg")}
+              <Icon name="trash" size={13} />
             </button>
           </div>
         )}

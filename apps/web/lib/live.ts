@@ -7,6 +7,7 @@
 // ================================================================
 import { apiBase } from "./db";
 import { useStore } from "../store";
+import { playReceiveSound, notifyReply } from "./notify";
 import type { ChatMessage, Conversation } from "@myosotis/core";
 
 let source: EventSource | null = null;
@@ -174,6 +175,8 @@ function applyEvent(data: { type: string; conversationId: string; message: ChatM
       return;
     }
     useStore.setState({ messages: [...store.messages, msg] });
+    // an assistant reply streamed from another device of ours still chimes
+    if (msg.role === "assistant") playReceiveSound();
     return;
   }
   // another conversation: count it as unread and refresh the preview
@@ -189,4 +192,15 @@ function applyEvent(data: { type: string; conversationId: string; message: ChatM
       : c
   );
   useStore.setState({ convos });
+  if (msg.role === "assistant") {
+    // a reply in a background conversation: chime + desktop notification
+    playReceiveSound();
+    const convo = store.convos.find((c) => c.id === data.conversationId);
+    const agent = store.agents.find((a) => a.id === (msg.agentId || convo?.agentId));
+    void notifyReply({
+      title: agent?.name ?? convo?.title ?? "Myosotis",
+      body: msg.content.slice(0, 120),
+      convoId: data.conversationId,
+    });
+  }
 }

@@ -5,6 +5,7 @@ import { setLanguage, t, tf, dateLocale } from "./i18n";
 import { db, exportAll, importAll, getDbMode, remoteDB, apiBase } from "./lib/db";
 import { connectLive, disconnectLive, clearUnread } from "./lib/live";
 import { uploadImages } from "./lib/uploads";
+import { playReceiveSound, playSentSound, notifyReply } from "./lib/notify";
 import { mergeAgentConversations } from "./lib/migrate";
 import { chatComplete, embedText } from "@myosotis/core";
 import { buildContextMessages, extractMemories, maybeSummarize, generateTitle, retrieveMemories, MEMORY_EXTRACT_EVERY } from "@myosotis/core";
@@ -57,6 +58,7 @@ async function sendRemoteTurn(
     status: "sending",
   };
   set((s: any) => ({ messages: [...s.messages, optimistic], replyTo: null }));
+  playSentSound();
 
   try {
     // hub mode: upload images first so the message only carries URLs
@@ -131,7 +133,8 @@ async function sendRemoteTurn(
           messages: [...s.messages.filter((m: ChatMessage) => m.id !== optimistic.id), finished],
           streamText: "",
         }));
-        // subtle "reply arrived" haptic (ignored where unsupported)
+        // reply landed: chime + haptic (both no-ops where unsupported/off)
+        playReceiveSound();
         try {
           navigator.vibrate?.(15);
         } catch {}
@@ -907,6 +910,7 @@ export const useStore = create<AppState>()(
           status: "ok",
         };
         await db.messages.add(userMsg);
+        playSentSound();
         if (replyTo) set({ replyTo: null });
         set((s) => ({ messages: [...s.messages, userMsg] }));
 
@@ -1011,6 +1015,7 @@ export const useStore = create<AppState>()(
           };
           await db.messages.add(aiMsg);
           set((s) => ({ messages: [...s.messages, aiMsg], streamText: "" }));
+          playReceiveSound();
         }
 
         abortRef.current = null;
@@ -1055,6 +1060,7 @@ export const useStore = create<AppState>()(
           status: "sending",
         };
         await db.messages.add(userMsg);
+        playSentSound();
 
         // 2. resolve model
         const { models, providers, settings } = get();
@@ -1204,6 +1210,15 @@ export const useStore = create<AppState>()(
           streamText: "",
           convos: sortConvos([updatedConvo, ...s.convos.filter((c) => c.id !== convo.id)]),
         }));
+        playReceiveSound();
+        // background window: surface the reply as a desktop notification
+        if (!document.hasFocus() && finalStatus === "ok") {
+          void notifyReply({
+            title: agent.name,
+            body: plainPreview(full).slice(0, 120),
+            convoId: convo.id,
+          });
+        }
 
         // 7. background jobs: title + memory extraction (fire & forget)
         const chatRmForJobs = rm;

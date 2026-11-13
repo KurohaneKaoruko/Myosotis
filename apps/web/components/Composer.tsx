@@ -158,6 +158,11 @@ export default function Composer() {
     if (draftConvoRef.current) setDraft(draftConvoRef.current, text);
     draftConvoRef.current = activeConvoId;
     setText(activeConvoId ? getDraft(activeConvoId) : "");
+    // desktop: focus the input on conversation switch, like mainstream apps
+    // (skipped on touch devices so the on-screen keyboard doesn't pop open)
+    if (activeConvoId && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      requestAnimationFrame(() => taRef.current?.focus());
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConvoId]);
 

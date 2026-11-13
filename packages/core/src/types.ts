@@ -62,6 +62,10 @@ export interface Settings {
   browserTts: boolean;
   browserStt: boolean;
   sendOnEnter: boolean;
+  /** message sound effects (reply arrives / message sent) */
+  soundEnabled: boolean;
+  /** desktop notifications when a reply lands in a background conversation */
+  desktopNotify: boolean;
   onboardingDone: boolean;
 }
 
@@ -262,6 +266,8 @@ export const DEFAULT_SETTINGS: Settings = {
   browserTts: true,
   browserStt: true,
   sendOnEnter: true,
+  soundEnabled: true,
+  desktopNotify: false,
   onboardingDone: false,
 };
 

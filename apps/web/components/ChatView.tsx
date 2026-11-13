@@ -58,6 +58,8 @@ export default function ChatView() {
   const [showSummary, setShowSummary] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [showJump, setShowJump] = useState(false);
+  // messages that arrived while the user scrolled away (jump button badge)
+  const [missedCount, setMissedCount] = useState(0);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setQuery] = useState("");
   const [matchIdx, setMatchIdx] = useState(0);
@@ -114,14 +116,25 @@ export default function ChatView() {
     if (!el) return;
     const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 140;
     stickBottom.current = nearBottom;
+    if (nearBottom) setMissedCount(0);
     setShowJump(el.scrollHeight - el.scrollTop - el.clientHeight > 420);
   };
+
+  // count messages arriving while scrolled away (for the jump badge)
+  const prevLenRef = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length > prevLenRef.current && !stickBottom.current) {
+      setMissedCount((n) => n + (messages.length - prevLenRef.current));
+    }
+    prevLenRef.current = messages.length;
+  }, [messages.length]);
 
   const jumpToBottom = () => {
     const el = scrollRef.current;
     if (el) {
       el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
       stickBottom.current = true;
+      setMissedCount(0);
     }
   };
 
@@ -466,6 +479,7 @@ export default function ChatView() {
         {showJump && !isStreamingHere && (
           <button className="jump-btn" onClick={jumpToBottom} title={t("jumpBottom")}>
             <Icon name="down" size={17} />
+            {missedCount > 0 && <span className="jump-badge">{missedCount > 99 ? "99+" : missedCount}</span>}
           </button>
         )}
       </div>

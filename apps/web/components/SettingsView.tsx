@@ -652,6 +652,33 @@ function VoiceCard() {
         </div>
         <Toggle checked={settings.browserStt} onChange={(v) => setSettings({ browserStt: v })} />
       </div>
+      <div className="set-row">
+        <div className="info">
+          <div className="t">{t("msgSound")}</div>
+          <div className="d">{t("msgSoundDesc")}</div>
+        </div>
+        <Toggle checked={settings.soundEnabled ?? true} onChange={(v) => setSettings({ soundEnabled: v })} />
+      </div>
+      <div className="set-row" style={{ borderBottom: "none" }}>
+        <div className="info">
+          <div className="t">{t("desktopNotify")}</div>
+          <div className="d">{t("desktopNotifyDesc")}</div>
+        </div>
+        <Toggle
+          checked={settings.desktopNotify ?? false}
+          onChange={async (v) => {
+            // ask while we still have the user gesture — background requests get silently dropped
+            if (v && "Notification" in window && Notification.permission === "default") {
+              try {
+                await Notification.requestPermission();
+              } catch {
+                /* unsupported */
+              }
+            }
+            setSettings({ desktopNotify: v });
+          }}
+        />
+      </div>
     </div>
   );
 }
