@@ -174,9 +174,9 @@ export function Avatar({ agent, size = 42, radius }: { agent: Agent; size?: numb
   const style: React.CSSProperties = {
     width: size,
     height: size,
-    borderRadius: radius ?? Math.round(size * 0.32),
+    borderRadius: radius ?? Math.round(size * 0.18),
     // softened HSL: 70% saturation reads neon on dark themes
-    background: `linear-gradient(135deg, hsl(${agent.hue} 62% 58%), hsl(${(agent.hue + 40) % 360} 58% 46%))`,
+    background: `hsl(${agent.hue} 52% 55%)`,
     fontSize: Math.round(size * 0.52),
     display: "flex",
     alignItems: "center",

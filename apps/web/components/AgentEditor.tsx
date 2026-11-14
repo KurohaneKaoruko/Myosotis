@@ -206,8 +206,8 @@ function EditorBody({ agentId }: { agentId: string }) {
           style={{
             width: 68,
             height: 68,
-            borderRadius: 22,
-            background: `linear-gradient(135deg, hsl(${form.hue} 62% 58%), hsl(${(form.hue + 40) % 360} 58% 46%))`,
+            borderRadius: 12,
+            background: `hsl(${form.hue} 52% 55%)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

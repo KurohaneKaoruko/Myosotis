@@ -122,8 +122,8 @@ export default function GroupEditor({
                     width: 26,
                     height: 26,
                     fontSize: 14,
-                    borderRadius: 9,
-                    background: `linear-gradient(135deg, hsl(${a.hue} 62% 58%), hsl(${(a.hue + 40) % 360} 58% 46%))`,
+                    borderRadius: 6,
+                    background: `hsl(${a.hue} 52% 55%)`,
                   }}
                 >
                   {a.emoji}

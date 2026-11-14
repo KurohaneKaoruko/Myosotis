@@ -153,7 +153,6 @@ export default function ChatView() {
     const noAgents = agents.length === 0;
     return (
       <div className="empty-chat">
-        <div className="ec-halo" aria-hidden />
         <div className="big">🌸</div>
         <div className="t">{noAgents ? t("noAgentsTitle") : t("pickConversation")}</div>
         <div className="d">
@@ -209,7 +208,7 @@ export default function ChatView() {
               <span
                 key={a.id}
                 style={{
-                  background: `linear-gradient(135deg, hsl(${a.hue} 62% 58%), hsl(${(a.hue + 40) % 360} 58% 46%))`,
+                  background: `hsl(${a.hue} 52% 55%)`,
                 }}
               >
                 {a.emoji}

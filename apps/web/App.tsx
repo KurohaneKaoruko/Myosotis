@@ -221,7 +221,7 @@ export default function App() {
               color: "var(--text)",
               border: "1px solid var(--border)",
               boxShadow: "var(--shadow-lg)",
-              borderRadius: "13px",
+              borderRadius: "8px",
               fontSize: "13px",
             },
           }}
