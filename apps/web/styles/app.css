@@ -170,11 +170,21 @@ button {
   color: var(--text);
 }
 .rail-btn:active {
-  transform: scale(0.93);
+  transform: scale(0.94);
 }
+/* rosmarin nav: active = left accent bar + tinted bg (not a filled tile) */
 .rail-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rail-btn.active::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
   background: var(--accent);
-  color: var(--accent-contrast);
 }
 .rail-dot {
   position: absolute;
@@ -251,22 +261,23 @@ button {
   width: 38px;
   height: 38px;
   flex-shrink: 0;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: var(--radius);
-  background: var(--accent);
-  color: var(--accent-contrast);
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: filter var(--dur-fast) var(--ease);
+  transition: border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
 }
 .new-btn:hover {
-  transform: none;
-  filter: brightness(1.06);
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 .new-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.96);
 }
 .list-empty {
   text-align: center;
@@ -334,9 +345,11 @@ button {
   padding: 6px 10px 10px;
 }
 .section-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 2.2px;
   color: var(--text-3);
   padding: 12px 8px 6px;
   display: flex;
@@ -371,6 +384,7 @@ button {
 .convo-item:hover {
   background: var(--surface-2);
 }
+/* rosmarin list item: tinted bg + left accent bar */
 .convo-item.active {
   background: var(--accent-soft);
 }
@@ -380,7 +394,7 @@ button {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 3px;
+  width: 2px;
   height: 26px;
   border-radius: 0;
   background: var(--accent);
@@ -530,35 +544,44 @@ button {
   }
 }
 
+/* default + "none": blueprint grid — the rosmarin signature background */
+.main[data-wallpaper="none"] {
+  background-image: var(--bg-pattern);
+  background-size: var(--bg-pattern-size);
+}
 /* chat wallpaper variants */
 .main[data-wallpaper="aurora"] {
-  background:
+  background-image:
     radial-gradient(640px 420px at 88% -6%, var(--accent-soft), transparent 64%),
     radial-gradient(520px 380px at -4% 108%, var(--accent-soft), transparent 60%),
-    var(--bg);
+    var(--bg-pattern);
+  background-size: auto, auto, var(--bg-pattern-size);
 }
 .main[data-wallpaper="mesh"] {
-  background:
+  background-image:
     linear-gradient(135deg, var(--accent-soft) 0%, transparent 35%, transparent 65%, var(--accent-soft) 100%),
-    var(--bg);
+    var(--bg-pattern);
+  background-size: auto, var(--bg-pattern-size);
 }
 .main[data-wallpaper="sakura"] {
-  background:
+  background-image:
     radial-gradient(760px 480px at 16% -8%, rgb(244 143 177 / 0.16), transparent 62%),
     radial-gradient(620px 420px at 108% 34%, rgb(206 147 216 / 0.12), transparent 58%),
-    var(--bg);
+    var(--bg-pattern);
+  background-size: auto, auto, var(--bg-pattern-size);
 }
 .main[data-wallpaper="dusk"] {
-  background:
+  background-image:
     linear-gradient(180deg, rgb(94 53 177 / 0.09), transparent 42%),
     radial-gradient(900px 520px at 82% 112%, rgb(255 112 67 / 0.09), transparent 62%),
-    var(--bg);
+    var(--bg-pattern);
+  background-size: auto, auto, var(--bg-pattern-size);
 }
 .main[data-wallpaper="paper"] {
-  background:
+  background-image:
     radial-gradient(color-mix(in srgb, var(--text) 3.2%, transparent) 1px, transparent 1.4px),
-    var(--bg);
-  background-size: 22px 22px;
+    var(--bg-pattern);
+  background-size: 22px 22px, var(--bg-pattern-size);
 }
 
 /* ============================================================
@@ -686,15 +709,17 @@ button {
 /* date separator */
 .date-chip {
   align-self: center;
-  font-size: 12px;
-  color: var(--text-2);
-  background: var(--surface-2);
+  font-size: 10.5px;
+  font-family: var(--mono);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  background: var(--surface);
   border: 1px solid var(--border);
-  padding: 4px 18px;
-  border-radius: 999px;
+  padding: 4px 16px;
+  border-radius: var(--radius-sm);
   margin: 8px 0 4px;
   user-select: none;
-  box-shadow: var(--shadow-sm);
 }
 
 .msg {
@@ -1224,6 +1249,7 @@ button {
 
 .msg .time {
   font-size: 10px;
+  font-family: var(--mono);
   color: var(--text-3);
   align-self: flex-end;
   user-select: none;
@@ -2084,30 +2110,89 @@ button {
   flex-direction: column;
   gap: 24px;
 }
+/* rosmarin section header: hairline rule + mono uppercase label */
 .page-title {
   font-size: 23px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  letter-spacing: -0.3px;
   display: flex;
   flex-direction: column;
+  border-left: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  padding-left: 14px;
 }
 .page-title .desc {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-3);
   font-weight: 400;
-  margin-top: 3px;
+  margin-top: 4px;
+  font-family: var(--mono);
+  letter-spacing: 0.6px;
+}
+
+/* ============================================================
+   Rosmarin blueprint utilities
+   ============================================================ */
+/* corner cut: square card with a notched top-right corner */
+.cut-corner {
+  position: relative;
+}
+.cut-corner::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 12px 12px 0;
+  border-color: transparent var(--bg) transparent transparent;
+  z-index: 1;
+}
+/* hover: bottom indicator line grows from left */
+.indicator-line {
+  position: relative;
+  overflow: hidden;
+}
+.indicator-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--accent);
+  transition: width var(--dur-slow) var(--ease-out);
+  pointer-events: none;
+  z-index: 1;
+}
+.indicator-line:hover::before {
+  width: 100%;
 }
 
 .card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 18px;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--dur) var(--ease);
+  box-shadow: none;
+  transition: border-color var(--dur) var(--ease);
+  overflow: hidden;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 12px 12px 0;
+  border-color: transparent var(--bg) transparent transparent;
+  z-index: 1;
 }
 .card:hover {
-  box-shadow: var(--shadow);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
 }
 .card h3 {
   font-size: 15px;
@@ -2197,8 +2282,7 @@ textarea.input {
   color: var(--accent-contrast);
 }
 .btn.primary:hover {
-  filter: brightness(1.07);
-  background: var(--accent);
+  background: color-mix(in srgb, var(--accent) 88%, var(--text));
 }
 .btn.primary:active {
   transform: scale(0.97);
@@ -2919,22 +3003,22 @@ textarea.input {
   position: relative;
 }
 .empty-chat .big {
-  font-size: 60px;
+  font-size: 44px;
   margin-bottom: 4px;
-  animation: float 3.2s ease-in-out infinite;
-}
-@keyframes float {
-  50% {
-    transform: translateY(-8px);
-  }
+  filter: grayscale(0.4);
+  opacity: 0.85;
 }
 .empty-chat .t {
   font-size: 17px;
   color: var(--text);
   font-weight: 700;
+  letter-spacing: -0.2px;
 }
 .empty-chat .d {
-  font-size: 13px;
+  font-size: 11px;
+  font-family: var(--mono);
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
   color: var(--text-3);
   margin-bottom: 14px;
 }
@@ -3504,8 +3588,10 @@ pre[data-lang]::before {
 
 /* speaker label above an assistant bubble inside a group */
 .msg-name {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
+  font-family: var(--mono);
+  letter-spacing: 0.4px;
   color: var(--text-2);
   margin: 2px 0 3px 3px;
 }
@@ -3617,11 +3703,16 @@ pre[data-lang]::before {
 }
 .login-card h1 {
   font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
   margin: 0 0 4px;
   color: var(--text);
 }
 .login-sub {
-  font-size: 13px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
   color: var(--text-3);
   margin: 0 0 22px;
 }

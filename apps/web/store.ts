@@ -1518,11 +1518,12 @@ export const useStore = create<AppState>()(
     }),
     {
       name: "myosotis.settings",
-      version: 2,
+      version: 3,
       migrate: (persisted: any) => {
-        // v0 -> v1: default theme azure -> mono (black/white minimal)
-        if (persisted?.settings?.themeId === "azure") {
-          persisted.settings.themeId = "mono";
+        // v1 -> v3: rosmarin redesign — everyone moves to azure (blue-600);
+        // the old mono default is retired. version 2 was skipped in dev.
+        if (persisted?.settings?.themeId === "mono") {
+          persisted.settings.themeId = "azure";
         }
         // ensure fields added after v0.1.0 exist for older snapshots
         if (persisted?.settings) {

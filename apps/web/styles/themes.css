@@ -3,12 +3,60 @@
    All colors flow through CSS variables set on <html data-theme data-mode>.
    ============================================================ */
 
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/GeistSans-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-400.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-500.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-600.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Geist Mono";
+  src: url("/fonts/GeistMono-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 :root {
-  /* sharp-minimal geometry (rosmarin/Geist school): hairline borders,
-     near-square corners, pills only where semantics demand (chips/toggles) */
-  --radius: 6px;
-  --radius-lg: 8px;
-  --radius-sm: 3px;
+  /* rosmarin blueprint geometry: square corners, hairlines, mono labels */
+  --radius: 0px;
+  --radius-lg: 0px;
+  --radius-sm: 0px;
 
   /* motion tokens */
   --dur-fast: 100ms;
@@ -18,112 +66,128 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI",
-    "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "HarmonyOS Sans SC",
-    "Noto Sans SC", sans-serif;
-  --mono: ui-monospace, "Cascadia Code", Consolas, "SF Mono", monospace;
+  --font: "Geist Sans", -apple-system, BlinkMacSystemFont, "Segoe UI Variable",
+    "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC",
+    "HarmonyOS Sans SC", "Noto Sans SC", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "Cascadia Code", Consolas, "SF Mono",
+    monospace;
 }
 
-/* ---- light mode base ---- */
+/* ---- light mode base: blueprint white + blue-600 ---- */
 :root[data-mode="light"] {
-  --bg: #f4f4f5;
-  --bg-deep: #ececed;
-  --rail-bg: #efefef;
+  --bg: #ffffff;
+  --bg-deep: #f8fafc;
+  --rail-bg: #fafafa;
   --sidebar-bg: #fafafa;
   --surface: #ffffff;
-  --surface-2: #f4f4f5;
-  --surface-3: #e8e8ea;
-  --text: #171717;
-  --text-2: #555558;
-  --text-3: #8f8f92;
-  --border: #e4e4e6;
-  --border-strong: #d4d4d6;
-  /* flat school: shadows describe elevation in 1px steps, not blurs */
-  --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  --surface-2: #f8fafc;
+  --surface-3: #f1f5f9;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --shadow-sm: 0 0 0 1px rgba(15, 23, 42, 0.03);
+  --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 8px 30px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(15, 23, 42, 0.06);
   --bubble-ai: #ffffff;
   --bubble-ai-text: var(--text);
-  --code-bg: #f4f4f5;
-  --danger: #d43d41;
-  --titlebar-bg: #efefef;
+  --code-bg: #f8fafc;
+  --danger: #dc2626;
+  --titlebar-bg: #fafafa;
+  /* blueprint grid on the app background */
+  --bg-pattern:
+    linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+  --bg-pattern-size: 40px 40px;
 }
 
-/* ---- dark mode base ---- */
+/* ---- dark mode base: slate-950 engineering terminal ---- */
 :root[data-mode="dark"] {
-  --bg: #0e0e10;
-  --bg-deep: #09090a;
-  --rail-bg: #0c0c0d;
-  --sidebar-bg: #131314;
-  --surface: #171718;
-  --surface-2: #202021;
-  --surface-3: #29292b;
-  --text: #ececed;
-  --text-2: #a0a0a3;
-  --text-3: #6e6e72;
-  --border: #262628;
-  --border-strong: #38383a;
+  --bg: #0a0f1c;
+  --bg-deep: #060a14;
+  --rail-bg: #0c1220;
+  --sidebar-bg: #0e1526;
+  --surface: #111a2e;
+  --surface-2: #182238;
+  --surface-3: #1e2a44;
+  --text: #e2e8f0;
+  --text-2: #94a3b8;
+  --text-3: #64748b;
+  --border: #1e293b;
+  --border-strong: #334155;
   --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.5);
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.6);
-  --bubble-ai: #171718;
+  --bubble-ai: #111a2e;
   --bubble-ai-text: var(--text);
-  --code-bg: #101011;
-  --danger: #ff6369;
-  --titlebar-bg: #0c0c0d;
+  --code-bg: #0c1424;
+  --danger: #f87171;
+  --titlebar-bg: #0c1220;
+  --bg-pattern:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  --bg-pattern-size: 40px 40px;
 }
 
 /* ---- accent palettes ---- */
-/* mono: black-on-light / white-on-dark minimalism */
-:root[data-theme="mono"] {
-  --accent: #171717;
+/* azure: blue-600 — the rosmarin default */
+:root[data-theme="azure"] {
+  --accent: #2563eb;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(23, 23, 23, 0.07);
-  --accent-glow: rgba(23, 23, 23, 0.12);
+  --accent-soft: rgba(37, 99, 235, 0.08);
+  --accent-glow: rgba(37, 99, 235, 0.18);
+}
+:root[data-mode="dark"][data-theme="azure"] {
+  --accent: #3b82f6;
+  --accent-contrast: #0a0f1c;
+  --accent-soft: rgba(59, 130, 246, 0.1);
+  --accent-glow: rgba(59, 130, 246, 0.16);
+}
+/* mono: ink-on-white terminal */
+:root[data-theme="mono"] {
+  --accent: #0f172a;
+  --accent-contrast: #ffffff;
+  --accent-soft: rgba(15, 23, 42, 0.06);
+  --accent-glow: rgba(15, 23, 42, 0.12);
 }
 :root[data-mode="dark"][data-theme="mono"] {
-  --accent: #ececed;
-  --accent-contrast: #0e0e10;
-  --accent-soft: rgba(236, 236, 237, 0.09);
-  --accent-glow: rgba(236, 236, 237, 0.11);
-}
-:root[data-theme="azure"] {
-  --accent: #3b82f6;
-  --accent-contrast: #ffffff;
-  --accent-soft: rgba(99, 102, 241, 0.12);
-  --accent-glow: rgba(99, 102, 241, 0.25);
+  --accent: #e2e8f0;
+  --accent-contrast: #0a0f1c;
+  --accent-soft: rgba(226, 232, 240, 0.08);
+  --accent-glow: rgba(226, 232, 240, 0.1);
 }
 :root[data-theme="violet"] {
-  --accent: #8b5cf6;
+  --accent: #7c3aed;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(139, 92, 246, 0.12);
-  --accent-glow: rgba(139, 92, 246, 0.28);
+  --accent-soft: rgba(124, 58, 237, 0.08);
+  --accent-glow: rgba(124, 58, 237, 0.18);
 }
 :root[data-theme="rose"] {
-  --accent: #f43f5e;
+  --accent: #e11d48;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(244, 63, 94, 0.12);
-  --accent-glow: rgba(244, 63, 94, 0.25);
+  --accent-soft: rgba(225, 29, 72, 0.08);
+  --accent-glow: rgba(225, 29, 72, 0.18);
 }
 :root[data-theme="forest"] {
-  --accent: #10b981;
+  --accent: #059669;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(16, 185, 129, 0.12);
-  --accent-glow: rgba(16, 185, 129, 0.25);
+  --accent-soft: rgba(5, 150, 105, 0.08);
+  --accent-glow: rgba(5, 150, 105, 0.18);
 }
 :root[data-theme="amber"] {
-  --accent: #f59e0b;
+  --accent: #d97706;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(245, 158, 11, 0.14);
-  --accent-glow: rgba(245, 158, 11, 0.28);
+  --accent-soft: rgba(217, 119, 6, 0.1);
+  --accent-glow: rgba(217, 119, 6, 0.18);
 }
 :root[data-theme="ink"] {
-  --accent: #475569;
+  --accent: #334155;
   --accent-contrast: #ffffff;
-  --accent-soft: rgba(71, 85, 105, 0.12);
-  --accent-glow: rgba(71, 85, 105, 0.2);
+  --accent-soft: rgba(51, 65, 85, 0.08);
+  --accent-glow: rgba(51, 65, 85, 0.16);
 }
 :root[data-mode="dark"][data-theme="ink"] {
   --accent: #94a3b8;
-  --accent-contrast: #101218;
+  --accent-contrast: #0a0f1c;
 }

@@ -244,7 +244,7 @@ export interface ResolvedModel {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  themeId: "mono",
+  themeId: "azure",
   themeMode: "auto",
   wallpaper: "none",
   userName: "",

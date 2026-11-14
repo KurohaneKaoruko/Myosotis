@@ -735,11 +735,13 @@ if (existsSync(WEB_DIST)) {
   });
   app.setNotFoundHandler((req, res) => {
     if (req.url.startsWith("/api/")) return res.status(404).send({ error: "not-found" });
-    // hashed assets must never fall back to index.html: a stale route table
-    // (hub started before a rebuild) would serve HTML as JS and blank the app
-    if (req.url.startsWith("/assets/")) {
+    // hashed assets and public files must never fall back to index.html:
+    // a stale route table (hub started before a rebuild) would serve HTML
+    // as JS/CSS/fonts and blank the app
+    const urlPath = decodeURIComponent(req.url.split("?")[0]);
+    if (req.url.startsWith("/assets/") || req.url.startsWith("/fonts/")) {
       // serve from disk if the file appeared after boot (dev/rolling-deploy flow)
-      const p = path.join(WEB_DIST, decodeURIComponent(req.url.split("?")[0]));
+      const p = path.join(WEB_DIST, urlPath);
       if (existsSync(p) && statSync(p).isFile()) {
         const ext = path.extname(p);
         const type =
@@ -747,6 +749,10 @@ if (existsSync(WEB_DIST)) {
           : ext === ".css" ? "text/css; charset=utf-8"
           : ext === ".svg" ? "image/svg+xml"
           : ext === ".html" ? "text/html; charset=utf-8"
+          : ext === ".woff2" ? "font/woff2"
+          : ext === ".woff" ? "font/woff"
+          : ext === ".png" ? "image/png"
+          : ext === ".ico" ? "image/x-icon"
           : "application/octet-stream";
         res.type(type).header("Cache-Control", "public, max-age=31536000, immutable");
         return res.send(createReadStream(p));
