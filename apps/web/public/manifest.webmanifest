@@ -1,0 +1,13 @@
+{
+  "name": "Myosotis Chat",
+  "short_name": "Myosotis",
+  "description": "多端 AI 陪伴聊天 — 记忆、群聊、剧情模式",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
