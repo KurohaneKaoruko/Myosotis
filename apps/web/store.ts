@@ -727,7 +727,12 @@ export const useStore = create<AppState>()(
         let messages: ChatMessage[];
         let hasMore = false;
         if (getDbMode() === "remote") {
-          messages = await remoteDB.loadMessages(id, { limit: PAGE });
+          // fetch one extra to detect whether older messages exist
+          messages = await remoteDB.loadMessages(id, { limit: PAGE + 1 });
+          if (messages.length > PAGE) {
+            hasMore = true;
+            messages = messages.slice(messages.length - PAGE);
+          }
         } else {
           const all = await db.messages.where("conversationId").equals(id).sortBy("createdAt");
           all.sort((a, b) => a.createdAt - b.createdAt);

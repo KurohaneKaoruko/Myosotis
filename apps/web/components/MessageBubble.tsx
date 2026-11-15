@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { Agent, ChatMessage } from "@myosotis/core";
 import { useStore } from "../store";
 import { resolveModel, formatTime } from "@myosotis/core";
@@ -22,7 +22,7 @@ import Markdown from "./Markdown";
 /** minimum press duration (ms) before we treat a touch as long-press */
 const LONG_PRESS_MS = 420;
 
-export default function MessageBubble({
+function MessageBubble({
   msg,
   agent,
   isLast,
@@ -440,3 +440,5 @@ export default function MessageBubble({
     </div>
   );
 }
+
+export default memo(MessageBubble);

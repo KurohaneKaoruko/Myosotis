@@ -53,6 +53,7 @@ const en: Partial<Dict> = {
   copyFailed: "Copy failed",
   copiedConvo: "Conversation copied to clipboard",
   copyConvo: "Copy conversation text",
+  transcribing: "Transcribing voice…",
   loadOlder: "Load earlier messages",
   connOffline: "OFFLINE // network down, messages paused",
   crashTitle: "Something went wrong",
