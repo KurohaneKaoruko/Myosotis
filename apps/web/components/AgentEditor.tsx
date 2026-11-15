@@ -206,7 +206,7 @@ function EditorBody({ agentId }: { agentId: string }) {
           style={{
             width: 68,
             height: 68,
-            borderRadius: 12,
+            borderRadius: 0,
             background: `hsl(${form.hue} 52% 55%)`,
             display: "flex",
             alignItems: "center",

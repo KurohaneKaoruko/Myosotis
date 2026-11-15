@@ -216,7 +216,7 @@ export default function ChatView() {
             ))}
           </div>
         ) : (
-          agent && <Avatar agent={agent} size={38} radius={12} />
+          agent && <Avatar agent={agent} size={38} radius={0} />
         )}
         <div>
           <div className="title">

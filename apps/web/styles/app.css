@@ -191,9 +191,9 @@ button {
   left: -8px;
   top: 50%;
   transform: translateY(-50%) scaleY(0);
-  width: 3px;
+  width: 2px;
   height: 18px;
-  border-radius: 0 3px 3px 0;
+  border-radius: 0;
   background: var(--accent);
   transition: background var(--dur-fast) var(--ease);
 }
