@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useStore } from "../store";
 import { Modal, Icon, SelectBox, Toggle } from "./ui";
-import { AGENT_PRESETS, clampSlotParam, type Agent, type AgentSlotParams, type Scenario, type SlotId, type SlotParamKey } from "@myosotis/core";
+import { clampSlotParam, type Agent, type AgentSlotParams, type Scenario, type SlotId, type SlotParamKey } from "@myosotis/core";
 import { t, tf } from "../i18n";
 import type { Dict } from "../i18n/zh-CN";
 import ScenarioEditor from "./ScenarioEditor";
@@ -99,19 +99,6 @@ function EditorBody({ agentId }: { agentId: string }) {
   const isNew = agent.name === t("newAgent") && !agent.persona;
   const set = (patch: Partial<Agent>) => setForm((f) => ({ ...f, ...patch }));
 
-  const applyPreset = (p: (typeof AGENT_PRESETS)[number]) => {
-    set({
-      name: p.name,
-      emoji: p.emoji,
-      hue: p.hue,
-      persona: p.persona,
-      greeting: p.greeting,
-      suggestions: p.suggestions,
-    });
-    setSuggText(p.suggestions.join("\n"));
-    showToast(tf("presetApplied", { name: p.name }), "success");
-  };
-
   const save = async () => {
     if (!form.name?.trim() || form.name === t("newAgent")) {
       showToast(t("nameRequired"), "error");
@@ -176,29 +163,6 @@ function EditorBody({ agentId }: { agentId: string }) {
         </>
       }
     >
-      {isNew && (
-        <div className="field">
-          <label>{t("fromTemplate")}</label>
-          <div className="chips">
-            {AGENT_PRESETS.map((p) => (
-              <button key={p.name} className="chip" onClick={() => applyPreset(p)}>
-                {p.emoji} {p.name}
-              </button>
-            ))}
-            <button
-              className="chip"
-              onClick={() => {
-                set({ name: "", persona: "", greeting: "" });
-                setSuggText("");
-                showToast(t("fromScratchToast"), "success");
-              }}
-            >
-              {t("fromScratch")}
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* avatar preview + emoji + hue */}
       <div className="row" style={{ alignItems: "center", marginBottom: 16 }}>
         <div

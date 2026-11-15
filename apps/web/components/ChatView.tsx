@@ -45,6 +45,7 @@ export default function ChatView() {
   const undoLastTurn = useStore((s) => s.undoLastTurn);
   const clearConversation = useStore((s) => s.clearConversation);
   const exportConversation = useStore((s) => s.exportConversation);
+  const copyConversation = useStore((s) => s.copyConversation);
   const updateAgent = useStore((s) => s.updateAgent);
   const addPendingImages = useStore((s) => s.addPendingImages);
   const multiSelectActive = useStore((s) => s.multiSelectActive);
@@ -322,6 +323,7 @@ export default function ChatView() {
           }
           items={[
             { label: t("exportMd"), icon: "download", onClick: () => exportConversation(convo.id) },
+            { label: t("copyConvo"), icon: "copy", onClick: () => copyConversation(convo.id) },
             { label: t("viewSummary"), icon: "book", onClick: () => setShowSummary(true) },
             {
               label: t("undoLastTurn"),

@@ -277,6 +277,7 @@ interface AppState {
   renameConversation: (id: string, title: string) => Promise<void>;
   clearConversation: (id: string) => Promise<void>;
   exportConversation: (id: string) => Promise<void>;
+  copyConversation: (id: string) => Promise<void>;
 
   // ----- group chat -----
   createGroupConversation: (title: string, participants: GroupParticipant[]) => Promise<string>;
@@ -863,6 +864,27 @@ export const useStore = create<AppState>()(
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 5000);
         get().showToast(t("exportedMdDone"), "success");
+      },
+
+      async copyConversation(id) {
+        const [convo, msgs] = await Promise.all([
+          db.conversations.get(id),
+          db.messages.where("conversationId").equals(id).sortBy("createdAt"),
+        ]);
+        if (!convo) return;
+        const agent = get().agents.find((a) => a.id === convo.agentId);
+        const lines = [`${agent?.name ?? "AI"} · ${convo.title}`, ""];
+        for (const m of msgs) {
+          const who = m.role === "user" ? get().settings.userName || t("me") : agent?.name ?? "AI";
+          const time = new Date(m.createdAt).toLocaleString(dateLocale());
+          lines.push(`[${who}] ${time}`, m.content, "");
+        }
+        try {
+          await navigator.clipboard.writeText(lines.join("\n"));
+          get().showToast(t("copiedConvo"), "success");
+        } catch {
+          get().showToast(t("copyFailed"), "error");
+        }
       },
 
       // -------------------------------------------------------

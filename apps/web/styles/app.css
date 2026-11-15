@@ -823,6 +823,19 @@ button {
   text-align: left;
   position: relative;
 }
+/* quote-jump landing flash */
+[data-msg-id].flash {
+  animation: quote-flash 1.4s var(--ease-out);
+}
+@keyframes quote-flash {
+  0%, 55% {
+    filter: none;
+  }
+  10%, 45% {
+    filter: drop-shadow(0 0 0 transparent) brightness(1.18);
+  }
+}
+
 /* rosmarin: timestamps are always-on mono metadata, not hover-only */
 .msg .time {
   font-family: var(--mono);
@@ -1407,15 +1420,24 @@ button {
   display: flex;
   align-items: flex-start;
   gap: 6px;
+  width: 100%;
+  border: none;
   border-left: 3px solid var(--accent);
   background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
   color: inherit;
   opacity: 0.85;
   padding: 5px 9px;
   border-radius: var(--radius);
+  font: inherit;
   font-size: 0.85em;
+  text-align: left;
+  cursor: pointer;
   margin-bottom: 7px;
   line-height: 1.5;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.reply-quote:hover {
+  opacity: 1;
 }
 .msg.user .reply-quote {
   border-left-color: rgba(255, 255, 255, 0.7);

@@ -214,7 +214,7 @@ export default function MessageBubble({
     key: "quote",
     label: t("quote"),
     icon: "chat",
-    run: () => setReplyTo({ role: msg.role, content: msg.content }),
+    run: () => setReplyTo({ id: msg.id, role: msg.role, content: msg.content } as any),
   });
   if (isUser) {
     actions.push({
@@ -321,13 +321,27 @@ export default function MessageBubble({
         )}
         <div className={`bubble ${!isUser && !streaming ? "md" : ""} ${isUser && msg.status === "sending" ? "sending" : ""} ${isUser && msg.status === "error" ? "failed" : ""}`}>
           {msg.replyTo && !editing && (
-            <div className="reply-quote">
+            <button
+              className="reply-quote"
+              title={(msg.replyTo as any).id ? t("jumpToQuoted") : undefined}
+              onClick={() => {
+                const src = (msg.replyTo as any).id;
+                if (!src) return;
+                const el = document.querySelector<HTMLElement>(`[data-msg-id="${src}"]`);
+                if (!el) return;
+                el.scrollIntoView({ behavior: "smooth", block: "center" });
+                el.classList.remove("flash");
+                void el.offsetWidth;
+                el.classList.add("flash");
+                setTimeout(() => el.classList.remove("flash"), 1400);
+              }}
+            >
               <Icon name="chat" size={12} />
               <span>
                 {msg.replyTo.role === "user" ? t("quoteSelf") : t("quoteAi")}：{msg.replyTo.content.slice(0, 80)}
                 {msg.replyTo.content.length > 80 ? "…" : ""}
               </span>
-            </div>
+            </button>
           )}
           {editing ? (
             <div className="edit-box">

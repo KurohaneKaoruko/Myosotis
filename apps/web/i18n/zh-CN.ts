@@ -53,6 +53,8 @@ const zhCN = {
   copy: "复制",
   copied: "已复制",
   copyFailed: "复制失败",
+  copiedConvo: "会话已复制到剪贴板",
+  copyConvo: "复制会话文本",
   speak: "朗读",
   stopSpeak: "停止",
   rewrite: "重写",
@@ -64,6 +66,7 @@ const zhCN = {
   editResend: "编辑后重新发送",
   saveResend: "保存并重新发送",
   quoteSelf: "自己",
+  jumpToQuoted: "跳转到被引用的消息",
   quoteAi: "AI",
   retry: "重试",
   selected: "已选",
@@ -103,10 +106,6 @@ const zhCN = {
 
   // agent editor
   editorTitle: "智能体设定",
-  fromTemplate: "从模板开始（点一下即可套用，还能继续改）",
-  fromScratch: "🎨 从零开始",
-  fromScratchToast: "从零开始，自由发挥吧",
-  presetApplied: "已套用「{name}」模板，可继续修改",
   nameRequired: "先给智能体起个名字吧",
   name: "名字",
   agentNamePh: "智能体的名字",
