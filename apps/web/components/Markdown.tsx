@@ -142,6 +142,11 @@ export default function Markdown({ text, highlight }: { text: string; highlight?
   useEffect(() => {
     const root = ref.current;
     if (!root) return;
+    // external links: new tab + safe opener (chat apps never navigate away)
+    root.querySelectorAll("a[href]").forEach((a) => {
+      a.setAttribute("target", "_blank");
+      a.setAttribute("rel", "noopener noreferrer nofollow");
+    });
     // syntax highlight + language tag + copy button
     root.querySelectorAll("pre").forEach((pre) => {
       const code = pre.querySelector("code");
