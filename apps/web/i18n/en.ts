@@ -50,6 +50,11 @@ const en: Partial<Dict> = {
 
   copy: "Copy",
   copied: "Copied",
+  prevImage: "Previous image",
+  nextImage: "Next image",
+  saveImage: "Save image",
+  saveAllImages: "Save all images ({n})",
+  saveFailed: "Save failed",
   copyFailed: "Copy failed",
   copiedConvo: "Conversation copied to clipboard",
   copyConvo: "Copy conversation text",

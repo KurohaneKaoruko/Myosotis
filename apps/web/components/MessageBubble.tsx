@@ -5,7 +5,7 @@ import { resolveModel, formatTime } from "@myosotis/core";
 import { speakBrowser, playTtsBlob, stopAudio } from "../lib/speech";
 import { ttsSynthesize } from "@myosotis/core";
 import { Icon } from "./ui";
-import { t } from "../i18n";
+import { t, tf } from "../i18n";
 import { ensureSignedImages, signedImageUrlSync } from "../lib/uploads";
 import Markdown from "./Markdown";
 
@@ -49,16 +49,18 @@ function MessageBubble({
   /** search term to highlight inside the bubble */
   highlight?: string;
 }) {
-  const [lightbox, setLightbox] = useState<string | null>(null);
-  // ESC closes the image lightbox (chat apps all do this)
+  const [lightbox, setLightbox] = useState<{ list: string[]; idx: number } | null>(null);
+  // ESC closes the image lightbox; ←/→ flips through a multi-image message
   useEffect(() => {
     if (!lightbox) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setLightbox(null);
+      else if (e.key === "ArrowLeft") setLightbox((lb) => (lb && lb.idx > 0 ? { ...lb, idx: lb.idx - 1 } : lb));
+      else if (e.key === "ArrowRight") setLightbox((lb) => (lb && lb.idx < lb.list.length - 1 ? { ...lb, idx: lb.idx + 1 } : lb));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lightbox]);
+  }, [lightbox !== null]);
   const [speaking, setSpeaking] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState("");
@@ -69,7 +71,9 @@ function MessageBubble({
   const [signTick, setSignTick] = useState(0);
   const images = useMemo(() => {
     void signTick; // re-map after the batch signature lands
-    return (msg.images ?? []).map((img) => signedImageUrlSync(img) ?? null);
+    // null from signedImageUrlSync means "not a hub upload" (data URL)
+    // or unsigned-yet; data URLs render as-is, hub paths wait for signing
+    return (msg.images ?? []).map((img) => (img.startsWith("data:") ? img : signedImageUrlSync(img)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [msg.images, signTick]);
   const hasUnsigned = (msg.images?.length ?? 0) > 0 && images.some((u) => u === null);
@@ -161,6 +165,21 @@ function MessageBubble({
     return out;
   };
 
+  const saveImage = async (src: string) => {
+    try {
+      const res = await fetch(src);
+      const blob = await res.blob();
+      const ext = blob.type.includes("png") ? "png" : blob.type.includes("webp") ? "webp" : blob.type.includes("gif") ? "gif" : "jpg";
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `myosotis-${msg.id.slice(-6)}-${Date.now()}.${ext}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch {
+      showToast(t("saveFailed"), "error");
+    }
+  };
+
   const copy = async () => {
     try {
       await navigator.clipboard.writeText(msg.content);
@@ -201,6 +220,16 @@ function MessageBubble({
   const actions: Array<{ key: string; label: string; icon: any; danger?: boolean; run: () => void }> = [
     { key: "copy", label: t("copy"), icon: "copy", run: copy },
   ];
+  if (msg.images?.length) {
+    actions.push({
+      key: "save-img",
+      label: msg.images.length > 1 ? tf("saveAllImages", { n: msg.images.length }) : t("saveImage"),
+      icon: "download",
+      run: () => {
+        for (const u of images.filter((x): x is string => !!x)) void saveImage(u);
+      },
+    });
+  }
   if (!isUser) {
     actions.push({ key: "speak", label: speaking ? t("stopSpeak") : t("speak"), icon: "speaker", run: speak });
     actions.push({
@@ -313,7 +342,7 @@ function MessageBubble({
                   src={images[i]!}
                   alt=""
                   loading="lazy"
-                  onClick={() => setLightbox(images[i]!)}
+                  onClick={() => setLightbox({ list: images.filter((u): u is string => !!u), idx: i })}
                 />
               ) : null
             )}
@@ -434,7 +463,46 @@ function MessageBubble({
 
       {lightbox && (
         <div className="lightbox" onClick={() => setLightbox(null)}>
-          <img src={lightbox} alt="" />
+          {lightbox.idx > 0 && (
+            <button
+              className="lb-nav prev"
+              aria-label={t("prevImage")}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightbox({ ...lightbox, idx: lightbox.idx - 1 });
+              }}
+            >
+              <Icon name="back" size={22} />
+            </button>
+          )}
+          <img src={lightbox.list[lightbox.idx]} alt="" />
+          {lightbox.idx < lightbox.list.length - 1 && (
+            <button
+              className="lb-nav next"
+              aria-label={t("nextImage")}
+              onClick={(e) => {
+                e.stopPropagation();
+                setLightbox({ ...lightbox, idx: lightbox.idx + 1 });
+              }}
+            >
+              <Icon name="back" size={22} style={{ transform: "scaleX(-1)" }} />
+            </button>
+          )}
+          <div className="lb-meta" onClick={(e) => e.stopPropagation()}>
+            <span className="lb-count">
+              {lightbox.idx + 1} / {lightbox.list.length}
+            </span>
+            <button
+              className="lb-btn"
+              title={t("saveImage")}
+              onClick={(e) => {
+                e.stopPropagation();
+                void saveImage(lightbox.list[lightbox.idx]);
+              }}
+            >
+              <Icon name="download" size={15} />
+            </button>
+          </div>
         </div>
       )}
     </div>

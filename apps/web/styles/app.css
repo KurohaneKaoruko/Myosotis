@@ -1571,6 +1571,64 @@ button {
   color: #ff7a7a;
 }
 
+/* lightbox navigation chrome */
+.lb-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  background: rgb(10 12 18 / 0.55);
+  color: #fff;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: background var(--dur-fast) var(--ease);
+}
+.lb-nav:hover {
+  background: rgb(10 12 18 / 0.8);
+}
+.lb-nav.prev {
+  left: 22px;
+}
+.lb-nav.next {
+  right: 22px;
+}
+.lb-meta {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  background: rgb(10 12 18 / 0.6);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  border-radius: var(--radius);
+  animation: fade-in 0.14s var(--ease);
+}
+.lb-count {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  color: rgb(255 255 255 / 0.85);
+}
+.lb-btn {
+  border: none;
+  background: none;
+  color: rgb(255 255 255 / 0.85);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+}
+.lb-btn:hover {
+  color: #fff;
+}
+
 /* lightbox for message images */
 .lightbox {
   position: fixed;

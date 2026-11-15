@@ -52,6 +52,11 @@ const zhCN = {
   // messages
   copy: "复制",
   copied: "已复制",
+  prevImage: "上一张",
+  nextImage: "下一张",
+  saveImage: "保存图片",
+  saveAllImages: "保存全部图片（{n} 张）",
+  saveFailed: "保存失败",
   copyFailed: "复制失败",
   copiedConvo: "会话已复制到剪贴板",
   copyConvo: "复制会话文本",

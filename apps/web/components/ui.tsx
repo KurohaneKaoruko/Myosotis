@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Select from "@radix-ui/react-select";
 import * as Switch from "@radix-ui/react-switch";
@@ -151,12 +151,13 @@ const paths: Record<string, ReactNode> = {
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
+export function Icon({ name, size = 20, style }: { name: IconName; size?: number; style?: CSSProperties }) {
   return (
     <svg
       viewBox="0 0 24 24"
       width={size}
       height={size}
+      style={style}
       fill="none"
       stroke="currentColor"
       strokeWidth={name === "dots" ? 3 : 1.8}
