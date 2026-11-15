@@ -301,12 +301,15 @@ interface AppState {
   regenerate: () => Promise<void>;
   undoLastTurn: () => Promise<void>;
   deleteMessage: (id: string) => Promise<void>;
+  rememberMessage: (messageId: string, agentId: string) => Promise<void>;
   editAndResend: (messageId: string, newText: string) => Promise<void>;
   /** re-send a message that failed to deliver */
   retryMessage: (id: string) => Promise<void>;
 
   // ----- memories -----
-  addMemory: (m: Omit<MemoryItem, "id" | "createdAt" | "updatedAt" | "hitCount" | "pinned">) => Promise<void>;
+  addMemory: (
+    m: Omit<MemoryItem, "id" | "createdAt" | "updatedAt" | "hitCount" | "pinned"> & { pinned?: boolean }
+  ) => Promise<void>;
   updateMemory: (id: string, patch: Partial<MemoryItem>) => Promise<void>;
   deleteMemory: (id: string) => Promise<void>;
 
@@ -1426,6 +1429,31 @@ export const useStore = create<AppState>()(
         set((s) => ({ convos: s.convos.map((c) => (c.id === msg.conversationId ? { ...c, ...patch } : c)) }));
       },
 
+      async rememberMessage(messageId, agentId) {
+        const msg = get().messages.find((m) => m.id === messageId);
+        const content = msg?.role === "user" && !msg.images?.length ? msg.content.trim() : "";
+        if (!content || !get().agents.some((a) => a.id === agentId)) return;
+
+        const memories = await db.memories.where("agentId").equals(agentId).toArray();
+        const existing = memories.find((m) => m.content.trim() === content);
+        if (existing) {
+          if (!existing.pinned) await get().updateMemory(existing.id, { pinned: true });
+          get().showToast(existing.pinned ? t("alreadyRemembered") : t("memoryPinned"), "success");
+          return;
+        }
+
+        await get().addMemory({
+          agentId,
+          content: content.length > 1200 ? `${content.slice(0, 1200)}…` : content,
+          kind: "fact",
+          importance: 3,
+          embedding: null,
+          scope: "agent",
+          pinned: true,
+        });
+        get().showToast(t("messageRemembered"), "success");
+      },
+
       async retryMessage(id) {
         const { messages, activeConvoId } = get();
         if (!activeConvoId || get().streamingConvoId) return;
@@ -1458,7 +1486,7 @@ export const useStore = create<AppState>()(
         const item: MemoryItem = {
           ...m,
           id: uid("mem"),
-          pinned: false,
+          pinned: m.pinned ?? false,
           hitCount: 0,
           createdAt: now(),
           updatedAt: now(),

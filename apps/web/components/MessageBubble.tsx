@@ -31,6 +31,7 @@ function MessageBubble({
   selected,
   onToggleSelect,
   showName,
+  memoryAgentId,
   /** consecutive message from the same sender: hide the avatar row */
   grouped,
   highlight,
@@ -44,6 +45,8 @@ function MessageBubble({
   onToggleSelect?: () => void;
   /** group chat: label the bubble with the speaking agent's name */
   showName?: boolean;
+  /** owning agent for saving user messages as durable memories */
+  memoryAgentId?: string;
   /** chat-app style grouping: consecutive same-sender message */
   grouped?: boolean;
   /** search term to highlight inside the bubble */
@@ -90,6 +93,7 @@ function MessageBubble({
   const providers = useStore((s) => s.providers);
   const regenerate = useStore((s) => s.regenerate);
   const deleteMessage = useStore((s) => s.deleteMessage);
+  const rememberMessage = useStore((s) => s.rememberMessage);
   const editAndResend = useStore((s) => s.editAndResend);
   const retryMessage = useStore((s) => s.retryMessage);
   const setReplyTo = useStore((s) => s.setReplyTo);
@@ -220,6 +224,14 @@ function MessageBubble({
   const actions: Array<{ key: string; label: string; icon: any; danger?: boolean; run: () => void }> = [
     { key: "copy", label: t("copy"), icon: "copy", run: copy },
   ];
+  if (isUser && !msg.images?.length && msg.status === "ok" && memoryAgentId && msg.content.trim()) {
+    actions.push({
+      key: "remember",
+      label: t("rememberMessage"),
+      icon: "memory",
+      run: () => void rememberMessage(msg.id, memoryAgentId),
+    });
+  }
   if (msg.images?.length) {
     actions.push({
       key: "save-img",

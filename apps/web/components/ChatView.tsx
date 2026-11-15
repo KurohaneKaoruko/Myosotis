@@ -472,6 +472,7 @@ export default function ChatView() {
                   <MessageBubble
                     msg={m}
                     agent={agentForMessage(m) ?? agent!}
+                    memoryAgentId={!isGroup && convo.mode !== "story" && m.role === "user" ? convo.agentId : undefined}
                     isLast={i === messages.length - 1}
                     showName={isGroup && m.role === "assistant" && !grouped}
                     grouped={grouped}
