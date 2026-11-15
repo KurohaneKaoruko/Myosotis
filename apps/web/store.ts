@@ -39,7 +39,8 @@ async function sendRemoteTurn(
   convo: Conversation,
   text: string,
   images: string[] | undefined,
-  replyTo: { id: string; role: string; content: string } | undefined
+  replyTo: { id: string; role: string; content: string } | undefined,
+  messageId?: string
 ) {
   const trimmed = text.trim();
   if (!trimmed && !images?.length) return;
@@ -48,7 +49,7 @@ async function sendRemoteTurn(
 
   // optimistic user bubble (server returns the canonical one)
   const optimistic: ChatMessage = {
-    id: uid("msg"),
+    id: messageId ?? uid("msg"),
     conversationId: convo.id,
     role: "user",
     content: trimmed,
@@ -57,8 +58,11 @@ async function sendRemoteTurn(
     createdAt: now(),
     status: "sending",
   };
+  remoteDB.messages.cache.set(optimistic.id, optimistic);
   set((s: any) => ({ messages: [...s.messages, optimistic], replyTo: null }));
   playSentSound();
+  const canonicalUser: { current: ChatMessage | null } = { current: null };
+  const lastAssistant: { current: ChatMessage | null } = { current: null };
 
   try {
     // hub mode: upload images first so the message only carries URLs
@@ -77,6 +81,7 @@ async function sendRemoteTurn(
       credentials: "include",
       body: JSON.stringify({
         conversationId: convo.id,
+        userMessageId: optimistic.id,
         text: trimmed,
         images: payloadImages,
         replyTo,
@@ -85,6 +90,10 @@ async function sendRemoteTurn(
     });
     if (res.status === 401) {
       window.dispatchEvent(new CustomEvent("myo:unauthorized"));
+      remoteDB.messages.cache.set(optimistic.id, { ...optimistic, status: "error" });
+      set((s: any) => ({
+        messages: s.messages.map((m: ChatMessage) => (m.id === optimistic.id ? { ...m, status: "error" } : m)),
+      }));
       return;
     }
     if (!res.ok || !res.body) throw new Error(`hub ${res.status}`);
@@ -93,8 +102,6 @@ async function sendRemoteTurn(
     const decoder = new TextDecoder();
     let buf = "";
     let agentStreams = new Map<string, string>(); // group mode per-agent text
-    let lastAssistant: ChatMessage | null = null;
-
     const handleEvent = (event: string, dataRaw: string) => {
       let data: any;
       try {
@@ -115,22 +122,24 @@ async function sendRemoteTurn(
         // the server stored our message → replace the optimistic bubble
         // with the canonical one (same id the server will keep)
         const echoed = data as ChatMessage;
+        canonicalUser.current = echoed;
+        remoteDB.messages.cache.delete(optimistic.id);
         remoteDB.messages.cache.set(echoed.id, echoed);
         set((s: any) => ({
           messages: s.messages.map((m: ChatMessage) =>
             m.id === optimistic.id
-              ? { ...echoed, status: "ok" }
+              ? { ...echoed, status: echoed.status === "error" ? "error" : "ok" }
               : m.content === echoed.content && m.role === "user" && m.status === "sending"
-                ? { ...echoed, status: "ok" }
+                ? { ...echoed, status: echoed.status === "error" ? "error" : "ok" }
                 : m
           ),
         }));
       } else if (event === "message") {
-        lastAssistant = data as ChatMessage;
+        lastAssistant.current = data as ChatMessage;
         const finished: ChatMessage = data;
         remoteDB.messages.cache.set(finished.id, finished);
         set((s: any) => ({
-          messages: [...s.messages.filter((m: ChatMessage) => m.id !== optimistic.id), finished],
+          messages: [...s.messages.filter((m: ChatMessage) => m.id !== optimistic.id || !!canonicalUser.current), finished],
           streamText: "",
         }));
         // reply landed: chime + haptic (both no-ops where unsupported/off)
@@ -139,6 +148,21 @@ async function sendRemoteTurn(
           navigator.vibrate?.(15);
         } catch {}
       } else if (event === "error") {
+        const failedId = String(data?.userMessageId ?? "");
+        if (failedId) {
+          const current = get().messages.find((m: ChatMessage) => m.id === failedId);
+          if (current) {
+            const failed = { ...current, status: "error" as const };
+            remoteDB.messages.cache.set(failedId, failed);
+            set((s: any) => ({ messages: s.messages.map((m: ChatMessage) => (m.id === failedId ? failed : m)) }));
+            void fetch(apiBase() + `/api/conversations/${encodeURIComponent(convo.id)}/messages/${encodeURIComponent(failedId)}`, {
+              method: "PUT",
+              headers: { "content-type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ status: "error" }),
+            }).catch(() => {});
+          }
+        }
         toast.error(String(data?.message ?? "hub error"));
       }
     };
@@ -160,11 +184,41 @@ async function sendRemoteTurn(
         if (dataLines.length) handleEvent(event, dataLines.join("\n"));
       }
     }
+    // The Hub can reject a turn before it creates the canonical user
+    // message (for example, a removed agent). Never leave the optimistic
+    // bubble spinning forever when the stream closes without a user echo.
+    if (!canonicalUser.current) {
+      const resolved = { ...optimistic, status: lastAssistant.current?.status === "ok" ? "ok" as const : "error" as const };
+      remoteDB.messages.cache.set(resolved.id, resolved);
+      set((s: any) => ({ messages: s.messages.map((m: ChatMessage) => (m.id === resolved.id ? resolved : m)) }));
+    }
   } catch (e: any) {
+    // A transport error after the completed assistant event is not a
+    // failed turn. Keep both delivered messages intact instead of showing
+    // a retry action that would duplicate the response.
+    if (lastAssistant.current?.status === "ok") {
+      const delivered = { ...(canonicalUser.current ?? optimistic), status: "ok" as const };
+      remoteDB.messages.cache.set(delivered.id, delivered);
+      set((s: any) => ({ messages: s.messages.map((m: ChatMessage) => (m.id === optimistic.id || m.id === delivered.id ? delivered : m)) }));
+      return;
+    }
     // failed to deliver — mark the bubble so it can be retried
+    const failedId = canonicalUser.current?.id ?? optimistic.id;
     set((s: any) => ({
-      messages: s.messages.map((m: ChatMessage) => (m.id === optimistic.id ? { ...m, status: "error" } : m)),
+      messages: s.messages.map((m: ChatMessage) => (m.id === failedId || m.id === optimistic.id ? { ...m, status: "error" } : m)),
     }));
+    const cached = remoteDB.messages.cache.get(failedId) ?? optimistic;
+    remoteDB.messages.cache.set(failedId, { ...cached, status: "error" });
+    if (canonicalUser.current) {
+      try {
+        await fetch(apiBase() + `/api/conversations/${encodeURIComponent(convo.id)}/messages/${encodeURIComponent(failedId)}`, {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ status: "error" }),
+        });
+      } catch {}
+    }
     toast.error(friendlyError(e));
   } finally {
     set({ streamingConvoId: null, streamingAgentId: null, streamText: "", uploadingImages: false });
@@ -292,11 +346,17 @@ interface AppState {
     convoId: string,
     text: string,
     images?: string[],
-    replyTo?: { role: "user" | "assistant"; content: string }
+    replyTo?: { role: "user" | "assistant"; content: string },
+    messageId?: string
   ) => Promise<void>;
 
   // ----- messaging -----
-  send: (text: string, images?: string[], replyTo?: { role: "user" | "assistant"; content: string }) => Promise<void>;
+  send: (
+    text: string,
+    images?: string[],
+    replyTo?: { role: "user" | "assistant"; content: string },
+    messageId?: string
+  ) => Promise<void>;
   stop: () => void;
   regenerate: () => Promise<void>;
   undoLastTurn: () => Promise<void>;
@@ -976,7 +1036,7 @@ export const useStore = create<AppState>()(
         await db.conversations.update(id, next);
         set((s) => ({ convos: s.convos.map((c) => (c.id === id ? { ...c, ...next } : c)) }));
       },
-      async sendGroupTurn(convoId, text, images, replyTo) {
+      async sendGroupTurn(convoId, text, images, replyTo, messageId) {
         const convo = get().convos.find((c) => c.id === convoId);
         if (!convo || convo.kind !== "group") return;
         const participants = convo.participants ?? [];
@@ -988,10 +1048,16 @@ export const useStore = create<AppState>()(
         const trimmed = text.trim();
         if (!trimmed && !images?.length) return;
 
+        const repliers = replyingParticipants(participants, trimmed, agents);
+        const availableRepliers = repliers.filter((p) => {
+          const agent = agents.find((a) => a.id === p.agentId);
+          return !!agent && !!resolveModel("chat", models, providers, settings, agent.models);
+        });
+
         // 1. persist the user message together with who may see it
         const visible = visibleAgentIds(participants, trimmed, agents);
         const userMsg: ChatMessage = {
-          id: uid("msg"),
+          id: messageId ?? uid("msg"),
           conversationId: convo.id,
           role: "user",
           content: trimmed,
@@ -999,7 +1065,7 @@ export const useStore = create<AppState>()(
           replyTo: replyTo ?? undefined,
           visibleTo: visible,
           createdAt: now(),
-          status: "ok",
+          status: availableRepliers.length ? "ok" : repliers.length ? "error" : "ok",
         };
         await db.messages.add(userMsg);
         playSentSound();
@@ -1025,10 +1091,16 @@ export const useStore = create<AppState>()(
         };
 
         // 2. decide who answers this message
-        const repliers = replyingParticipants(participants, trimmed, agents);
         if (!repliers.length) {
           await refreshMeta();
           get().showToast(t("groupNoReply"), "info");
+          return;
+        }
+        if (!availableRepliers.length) {
+          await db.messages.update(userMsg.id, { status: "error" });
+          set((s) => ({ messages: s.messages.map((m) => (m.id === userMsg.id ? { ...m, status: "error" } : m)) }));
+          await refreshMeta();
+          get().showToast(t("groupNoModelRetry"), "error");
           return;
         }
 
@@ -1046,9 +1118,10 @@ export const useStore = create<AppState>()(
         const controller = new AbortController();
         abortRef.current = controller;
         set({ streamingConvoId: convo.id, streamingAgentId: null, streamText: "" });
+        let anyResponse = false;
 
         // 4. let each participant answer in turn, each seeing the previous replies
-        for (const p of repliers) {
+        for (const p of availableRepliers) {
           if (controller.signal.aborted) break;
           const agent = agents.find((a) => a.id === p.agentId);
           if (!agent) continue;
@@ -1105,18 +1178,24 @@ export const useStore = create<AppState>()(
             createdAt: now(),
             status,
           };
+          if (status === "ok") anyResponse = true;
           await db.messages.add(aiMsg);
           set((s) => ({ messages: [...s.messages, aiMsg], streamText: "" }));
           playReceiveSound();
         }
 
         abortRef.current = null;
+        if (!anyResponse) {
+          await db.messages.update(userMsg.id, { status: "error" });
+          set((s) => ({ messages: s.messages.map((m) => (m.id === userMsg.id ? { ...m, status: "error" } : m)) }));
+          get().showToast(t("groupNoModelRetry"), "error");
+        }
         set({ streamingConvoId: null, streamingAgentId: null, streamText: "" });
         await refreshMeta();
       },
 
       // -------------------------------------------------------
-      async send(text, images, replyTo) {
+      async send(text, images, replyTo, messageId) {
         const { activeConvoId } = get();
         if (!activeConvoId) return;
         if (get().streamingConvoId) return;
@@ -1126,13 +1205,13 @@ export const useStore = create<AppState>()(
 
         // hub mode: the server runs the whole turn (persist + memory + stream)
         if (getDbMode() === "remote") {
-          await sendRemoteTurn(get, set as any, convo, text, images, replyTo as any);
+          await sendRemoteTurn(get, set as any, convo, text, images, replyTo as any, messageId);
           return;
         }
 
         // multi-agent round table has its own orchestration
         if (convo.kind === "group") {
-          await get().sendGroupTurn(convo.id, text, images, replyTo);
+          await get().sendGroupTurn(convo.id, text, images, replyTo, messageId);
           return;
         }
         const agent = get().agents.find((a) => a.id === convo.agentId);
@@ -1143,7 +1222,7 @@ export const useStore = create<AppState>()(
 
         // 1. persist user message
         const userMsg: ChatMessage = {
-          id: uid("msg"),
+          id: messageId ?? uid("msg"),
           conversationId: convo.id,
           role: "user",
           content: trimmed,
@@ -1162,9 +1241,18 @@ export const useStore = create<AppState>()(
         const visionRm = resolveModel("vision", models, providers, settings, agent.models);
         const rm = hasImages ? (visionRm ?? chatRm) : chatRm;
         if (!rm) {
-          set((s) => ({ messages: [...s.messages, userMsg] }));
+          await db.messages.update(userMsg.id, { status: "error" });
+          const failed = { ...userMsg, status: "error" as const };
+          set((s) => ({ messages: [...s.messages, failed] }));
+          const patch: Partial<Conversation> = {
+            updatedAt: now(),
+            lastMessage: plainPreview(trimmed || t("sendImageOnly")).slice(0, 40),
+            messageCount: await db.messages.where("conversationId").equals(convo.id).count(),
+            lastMessageRole: "user",
+          };
+          await db.conversations.update(convo.id, patch);
+          set((s) => ({ convos: sortConvos(s.convos.map((c) => (c.id === convo.id ? { ...c, ...patch } : c))) }));
           get().showToast(t("sendFirst"), "error");
-          set({ view: "settings" });
           return;
         }
 
@@ -1261,7 +1349,20 @@ export const useStore = create<AppState>()(
         }
 
         if (!full.trim() && finalStatus === "error") {
-          set({ streamingConvoId: null, streamText: "" });
+          await db.messages.update(userMsg.id, { status: "error" });
+          const patch: Partial<Conversation> = {
+            updatedAt: now(),
+            lastMessage: plainPreview(trimmed || t("sendImageOnly")).slice(0, 40),
+            messageCount: await db.messages.where("conversationId").equals(convo.id).count(),
+            lastMessageRole: "user",
+          };
+          await db.conversations.update(convo.id, patch);
+          set((s) => ({
+            messages: s.messages.map((m) => (m.id === userMsg.id ? { ...m, status: "error" } : m)),
+            streamingConvoId: null,
+            streamText: "",
+            convos: sortConvos(s.convos.map((c) => (c.id === convo.id ? { ...c, ...patch } : c))),
+          }));
           get().showToast(full, "error");
           return;
         }
@@ -1459,10 +1560,32 @@ export const useStore = create<AppState>()(
         if (!activeConvoId || get().streamingConvoId) return;
         const msg = messages.find((m) => m.id === id);
         if (!msg || msg.role !== "user" || msg.status !== "error") return;
-        // drop the failed bubble, then send the very same text again
-        await db.messages.delete(id);
-        set({ messages: get().messages.filter((m) => m.id !== id) });
-        await get().send(msg.content, msg.images, msg.replyTo as any);
+        // Also remove the failed assistant response directly attached to
+        // this attempt, but never erase later turns in the conversation.
+        const index = messages.findIndex((m) => m.id === id);
+        const stale = [msg];
+        for (let i = index + 1; i < messages.length; i++) {
+          const next = messages[i];
+          if (next.role !== "assistant" || next.status !== "error") break;
+          stale.push(next);
+        }
+        for (const item of stale) {
+          try {
+            await db.messages.delete(item.id);
+          } catch (error) {
+            // A request can fail before the hub stores the optimistic
+            // bubble, or one item may already have been removed. A 404
+            // is safe to skip; other errors must stop the retry.
+            const missing = getDbMode() === "remote" && String((error as Error)?.message ?? error).includes("api 404");
+            if (!missing) {
+              get().showToast(t("retryDeleteFailed"), "error");
+              return;
+            }
+            remoteDB.messages.cache.delete(item.id);
+          }
+        }
+        set({ messages: get().messages.filter((m) => !stale.some((x) => x.id === m.id)) });
+        await get().send(msg.content, msg.images, msg.replyTo as any, msg.id);
       },
 
       async editAndResend(messageId, newText) {
@@ -1475,10 +1598,19 @@ export const useStore = create<AppState>()(
         const all = await db.messages.where("conversationId").equals(msg.conversationId).sortBy("createdAt");
         const idx = all.findIndex((m) => m.id === messageId);
         if (idx < 0) return;
+        const removedCount = all.length - idx;
+        if (removedCount > 1) {
+          const ok = await get().askConfirm({
+            title: t("editResendConfirmTitle"),
+            message: tf("editResendConfirm", { n: removedCount }),
+            confirmText: t("editResend"),
+          });
+          if (!ok) return;
+        }
         const toDelete = all.slice(idx).map((m) => m.id);
         await db.messages.bulkDelete(toDelete);
         set({ messages: all.slice(0, idx) });
-        await get().send(text, msg.images);
+        await get().send(text, msg.images, msg.replyTo as any);
       },
 
       // -------------------------------------------------------

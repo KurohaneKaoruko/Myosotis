@@ -156,10 +156,20 @@ export async function runSingleTurn(
   /** abort signal — lets the client actually cancel the upstream call */
   signal?: AbortSignal,
   /** story mode: event the user triggered manually */
-  storyEventId?: string
+  storyEventId?: string,
+  /** client-generated id keeps the optimistic bubble addressable on retry */
+  userMessageId?: string
 ): Promise<{ userMsg: ChatMessage | null; assistantMsg: ChatMessage | null; error?: string }> {
   const trimmed = userText.trim();
   if (!trimmed && !images?.length) return { userMsg: null, assistantMsg: null };
+
+  // Resolve first so the initial user event has the correct delivery
+  // state. Emitting "ok" and correcting it in a second event races with
+  // clients that already treat the optimistic bubble as delivered.
+  const hasImages = !!images?.length;
+  const chatRm = resolveModel("chat", e.models, e.providers, e.settings, e.agent.models);
+  const visionRm = resolveModel("vision", e.models, e.providers, e.settings, e.agent.models);
+  const rm = hasImages ? (visionRm ?? chatRm) : chatRm;
 
   // 1. persist user message (inline images become stored URLs)
   let storedImages = images;
@@ -174,14 +184,14 @@ export async function runSingleTurn(
     }
   }
   const userMsg: ChatMessage = {
-    id: uid("msg"),
+    id: userMessageId ?? uid("msg"),
     conversationId: e.convo.id,
     role: "user",
     content: trimmed,
     images: storedImages?.length ? storedImages : undefined,
     replyTo: replyTo as any,
     createdAt: now(),
-    status: "ok",
+    status: rm ? "ok" : "error",
   };
   db.putJson("messages", userMsg.id, userId, userMsg, { conversation_id: e.convo.id, created_at: userMsg.createdAt });
   const convo0 = touchConvo(db, userId, e.convo, trimmed);
@@ -189,12 +199,9 @@ export async function runSingleTurn(
   bus.emit(userId, { type: "message", conversationId: e.convo.id, message: userMsg });
   bus.emit(userId, { type: "conversation", conversation: convo0 });
 
-  // 2. resolve chat model (vision falls back to chat)
-  const hasImages = !!images?.length;
-  const chatRm = resolveModel("chat", e.models, e.providers, e.settings, e.agent.models);
-  const visionRm = resolveModel("vision", e.models, e.providers, e.settings, e.agent.models);
-  const rm = hasImages ? (visionRm ?? chatRm) : chatRm;
-  if (!rm) return { userMsg, assistantMsg: null, error: "no-model" };
+  if (!rm) {
+    return { userMsg, assistantMsg: null, error: "no-model" };
+  }
 
   // 3. rolling summary keeps context bounded
   let convo = convo0;
@@ -266,6 +273,14 @@ export async function runSingleTurn(
   bus.emit(userId, { type: "conversation", conversation: convoAfter });
   cb.onMessage?.(assistantMsg);
 
+  let finalUser = userMsg;
+  if (assistantMsg.status === "error") {
+    finalUser = { ...userMsg, status: "error" };
+    db.putJson("messages", finalUser.id, userId, finalUser, { conversation_id: convo.id, created_at: finalUser.createdAt });
+    cb.onUser?.(finalUser);
+    bus.emit(userId, { type: "message", conversationId: convo.id, message: finalUser });
+  }
+
   // 5. background jobs: title & memory extraction (fire-and-forget)
   const firstUser = history0.find((m) => m.role === "user");
   if (!convo.title && firstUser && assistantMsg.status === "ok") {
@@ -295,7 +310,7 @@ export async function runSingleTurn(
       .catch(() => {});
   }
 
-  return { userMsg, assistantMsg, error: assistantMsg.status === "error" ? assistantMsg.content : undefined };
+  return { userMsg: finalUser, assistantMsg, error: assistantMsg.status === "error" ? assistantMsg.content : undefined };
 }
 
 // ----------------------------------------------------------------
@@ -308,28 +323,34 @@ export async function runGroupTurn(
   userText: string,
   images: string[] | undefined,
   cb: TurnCallbacks,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  userMessageId?: string
 ): Promise<void> {
   const participants = e.convo.participants ?? [];
   const text = userText.trim();
   if (!text && !images?.length) return;
+  const replyOrder = replyingParticipants(participants, text, e.agents);
+  const availableOrder = replyOrder.filter((p) => {
+    const agent = e.agents.find((a) => a.id === p.agentId);
+    return !!agent && !!resolveModel("chat", e.models, e.providers, e.settings, agent.models);
+  });
 
   const userMsg: ChatMessage = {
-    id: uid("msg"),
+    id: userMessageId ?? uid("msg"),
     conversationId: e.convo.id,
     role: "user",
     content: text,
     images: images?.length ? images : undefined,
     createdAt: now(),
-    status: "ok",
+    status: replyOrder.length && !availableOrder.length ? "error" : "ok",
   };
   db.putJson("messages", userMsg.id, userId, userMsg, { conversation_id: e.convo.id, created_at: userMsg.createdAt });
   touchConvo(db, userId, e.convo, text);
   cb.onUser?.(userMsg);
   bus.emit(userId, { type: "message", conversationId: e.convo.id, message: userMsg });
 
-  const replyOrder = replyingParticipants(participants, text, e.agents);
   if (!replyOrder.length) return;
+  if (!availableOrder.length) return;
 
   // embed the query once, reuse across agents
   let queryVec: number[] | null = null;
@@ -342,7 +363,7 @@ export async function runGroupTurn(
     }
   }
 
-  for (const p of replyOrder) {
+  for (const p of availableOrder) {
     const agent = e.agents.find((a) => a.id === p.agentId);
     if (!agent) continue;
     const rm = resolveModel("chat", e.models, e.providers, e.settings, agent.models);
@@ -387,6 +408,20 @@ export async function runGroupTurn(
     bus.emit(userId, { type: "message", conversationId: e.convo.id, message: assistantMsg });
     bus.emit(userId, { type: "conversation", conversation: after });
     cb.onMessage?.(assistantMsg);
+  }
+
+  const finalUser = db.getJson<ChatMessage>("messages", userMsg.id);
+  if (!availableOrder.length || finalUser?.status === "error") return;
+  const turnMessages = listMessages(db, userId, e.convo.id).filter((m) => m.createdAt >= userMsg.createdAt);
+  const repliedSuccessfully = turnMessages.some((m) => m.role === "assistant" && m.status === "ok");
+  if (!repliedSuccessfully) {
+    const failedUser: ChatMessage = { ...userMsg, status: "error" };
+    db.putJson("messages", failedUser.id, userId, failedUser, {
+      conversation_id: e.convo.id,
+      created_at: failedUser.createdAt,
+    });
+    cb.onUser?.(failedUser);
+    bus.emit(userId, { type: "message", conversationId: e.convo.id, message: failedUser });
   }
 
   // memory extraction after the whole round table (every N user turns).

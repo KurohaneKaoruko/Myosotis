@@ -80,6 +80,8 @@ const zhCN = {
   deleteMsgTitle: "删除消息",
   deleteMsgBody: "删除这条消息？",
   editResend: "编辑后重新发送",
+  editResendConfirmTitle: "重新发送将移除后续消息",
+  editResendConfirm: "从这条消息开始的 {n} 条消息（含后续回复）将被删除，再用新内容重新发送。是否继续？",
   saveResend: "保存并重新发送",
   quoteSelf: "自己",
   jumpToQuoted: "跳转到被引用的消息",
@@ -117,6 +119,7 @@ const zhCN = {
   recording: "松开或点「完成」结束录音，取消则丢弃",
   recCancel: "取消",
   sendFirst: "还没有配置可用的对话模型，请先到「设置」添加模型",
+  sendImageOnly: "图片",
 
   // agents view
 
@@ -477,6 +480,7 @@ const zhCN = {
   modeMention: "仅 @我",
   groupNoParticipants: "这个群聊已经没有参与者了",
   groupNoReply: "这次没有智能体被唤起，试试 @某位成员",
+  groupNoModelRetry: "被唤起的智能体都没有可用模型；消息已保留，配置模型后可重试",
   groupAgentNoModel: "「{name}」没有可用的对话模型，已跳过",
   groupEdit: "群聊设置",
   groupMembers: "{n} 位参与者",
@@ -618,6 +622,8 @@ const zhCN = {
   grpPinned: "置顶",
   sending: "发送中",
   resendFailed: "发送失败，点击重试",
+  editFailedMessage: "修改后重发",
+  retryDeleteFailed: "旧消息未能清理，暂未重发，请检查连接后再试",
   uploading: "正在上传图片…",
   searchNoResult: "无结果",
   searching: "搜索中…",

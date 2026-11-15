@@ -113,7 +113,7 @@ if (!API) {
         PORT: "8791",
         HOST: "127.0.0.1",
         MYO_DATA_DIR: managedDataDir,
-        MYO_WEB_DIST: path.join(here, "../../web/dist"),
+        MYO_WEB_DIST: process.env.MYO_WEB_DIST ?? path.join(here, "../../web/dist"),
       },
     }
   );

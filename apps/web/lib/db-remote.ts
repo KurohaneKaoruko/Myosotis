@@ -116,17 +116,18 @@ class RemoteTable<T extends Row> {
   }
   async delete(id: string): Promise<void> {
     const item = this.cache.get(id);
-    this.cache.delete(id);
     if (this.endpoint === "messages") {
       const convoId = (item as any)?.conversationId;
       if (convoId) {
-        jfetch(`/api/conversations/${encodeURIComponent(convoId)}/messages/${encodeURIComponent(id)}`, {
+        await jfetch(`/api/conversations/${encodeURIComponent(convoId)}/messages/${encodeURIComponent(id)}`, {
           method: "DELETE",
-        }).catch(() => {});
+        });
+        this.cache.delete(id);
         return;
       }
     }
     jfetch(`/api/data/${this.endpoint}/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
+    this.cache.delete(id);
   }
   async clear(): Promise<void> {
     const ids = [...this.cache.keys()];

@@ -1449,6 +1449,20 @@ button {
 .status-retry:hover {
   background: color-mix(in srgb, var(--danger) 20%, transparent);
 }
+.status-edit {
+  width: 25px;
+  height: 25px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-2);
+  cursor: pointer;
+}
+.status-edit:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .msg.user .bubble.sending {
   opacity: 0.72;
 }

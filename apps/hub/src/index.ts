@@ -558,9 +558,16 @@ const activeStreams = new Set<AbortController>();
 const streamByConvo = new Map<string, AbortController>();
 
 app.post("/api/chat", async (req: any, res: any) => {
-  const { conversationId, text, images, replyTo, storyEventId } = req.body ?? {};
+  const { conversationId, userMessageId, text, images, replyTo, storyEventId } = req.body ?? {};
   const convo = db.getJson<Conversation>("conversations", conversationId);
   if (!convo || !db.ownsRow(req.userId, "conversations", conversationId)) return res.status(404).send({ error: "no-convo" });
+  if (userMessageId !== undefined && (typeof userMessageId !== "string" || !/^msg_[a-zA-Z0-9_-]{1,100}$/.test(userMessageId))) {
+    return res.status(400).send({ error: "bad-message-id" });
+  }
+  if (userMessageId && db.getJson("messages", userMessageId) !== undefined) {
+    if (!db.ownsRow(req.userId, "messages", userMessageId)) return res.status(404).send({ error: "not-found" });
+    return res.status(409).send({ error: "message-id-conflict" });
+  }
   const userId = req.userId;
   // the whole turn (and its detached memory-extraction continuations)
   // runs inside this user's storage scope
@@ -614,7 +621,8 @@ app.post("/api/chat", async (req: any, res: any) => {
           onMessage: (m) => send("message", m),
           onStatus: (s) => send("status", s),
         },
-        ac.signal
+        ac.signal,
+        userMessageId
       );
     } else {
       const e = loadEntities(userId, convo.agentId);
@@ -643,9 +651,10 @@ app.post("/api/chat", async (req: any, res: any) => {
             },
           },
           ac.signal,
-          storyEventId
+          storyEventId,
+          userMessageId
         );
-        if (result.error) send("error", { message: result.error });
+        if (result.error) send("error", { message: result.error, userMessageId: result.userMsg?.id });
       }
     }
   } catch (e: any) {

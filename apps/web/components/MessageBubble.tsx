@@ -418,15 +418,28 @@ function MessageBubble({
         </div>
 
         {/* delivery status: sending spinner / failed retry */}
-        {isUser && (msg.status === "sending" || msg.status === "error") && (
+        {isUser && !editing && (msg.status === "sending" || msg.status === "error") && (
           <div className={`msg-status ${msg.status}`}>
             {msg.status === "sending" ? (
               <span className="status-spinner" aria-label={t("sending")} />
             ) : (
-              <button className="status-retry" onClick={() => retryMessage(msg.id)} title={t("resendFailed")}>
-                <Icon name="refresh" size={13} />
-                <span>{t("resendFailed")}</span>
-              </button>
+              <>
+                <button className="status-retry" onClick={() => retryMessage(msg.id)} title={t("resendFailed")}>
+                  <Icon name="refresh" size={13} />
+                  <span>{t("resendFailed")}</span>
+                </button>
+                <button
+                  className="status-edit"
+                  onClick={() => {
+                    setEditText(msg.content);
+                    setEditing(true);
+                  }}
+                  title={t("editFailedMessage")}
+                  aria-label={t("editFailedMessage")}
+                >
+                  <Icon name="edit" size={13} />
+                </button>
+              </>
             )}
           </div>
         )}
