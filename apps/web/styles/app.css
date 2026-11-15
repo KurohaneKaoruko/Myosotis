@@ -33,8 +33,13 @@ button {
   font-size: inherit;
   color: inherit;
 }
+*:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+}
 ::selection {
-  background: var(--accent-glow);
+  background: var(--accent-soft);
+  color: var(--text);
 }
 ::-webkit-scrollbar {
   width: 5px;
@@ -448,9 +453,25 @@ button {
   text-overflow: ellipsis;
 }
 .convo-item .time {
-  font-size: 11px;
+  font-size: 10.5px;
+  font-family: var(--mono);
+  letter-spacing: 0.4px;
   color: var(--text-3);
   flex-shrink: 0;
+}
+.convo-item::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.25s var(--ease-out);
+  pointer-events: none;
+}
+.convo-item:hover::after {
+  width: 100%;
 }
 .convo-item .preview {
   font-size: 12px;
@@ -683,8 +704,8 @@ button {
     transform var(--dur-fast) var(--ease);
 }
 .icon-btn:hover {
-  background: var(--surface-2);
-  color: var(--text);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .icon-btn:active {
   transform: scale(0.94);
@@ -932,9 +953,10 @@ button {
   margin-bottom: 6px;
 }
 .convo-group .group-title {
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.6px;
   text-transform: uppercase;
   color: var(--text-3);
   padding: 10px 10px 4px;
@@ -1458,9 +1480,26 @@ button {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
   padding: 9px 12px;
   display: flex;
+  align-items: flex-end;
+  box-shadow: var(--shadow);
+}
+.composer::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 0;
+  background: var(--accent);
+  transition: width 0.28s var(--ease-out);
+  pointer-events: none;
+}
+.composer:focus-within::after {
+  width: 100%;
+}
+.composer {
   align-items: flex-end;
   gap: 7px;
   transition:
@@ -2507,9 +2546,9 @@ textarea.input {
 
 .toggle {
   position: relative;
-  width: 46px;
-  height: 27px;
-  border-radius: 999px;
+  width: 40px;
+  height: 22px;
+  border-radius: var(--radius-sm);
   background: var(--surface-3);
   border: none;
   cursor: pointer;
@@ -2521,18 +2560,17 @@ textarea.input {
   position: absolute;
   top: 3px;
   left: 3px;
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-sm);
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
   transition: background var(--dur-fast) var(--ease);
 }
 .toggle.on {
   background: var(--accent);
 }
 .toggle.on .toggle-thumb {
-  transform: translateX(19px);
+  transform: translateX(18px);
 }
 
 .set-row {
@@ -3846,8 +3884,9 @@ pre[data-lang]::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-image: var(--bg-pattern), var(--bg-deep);
-  background-size: var(--bg-pattern-size), auto;
+  background-color: var(--bg-deep);
+  background-image: var(--bg-pattern);
+  background-size: var(--bg-pattern-size);
   z-index: 200;
 }
 .login-card {
