@@ -2983,13 +2983,14 @@ textarea.input {
 }
 .modal {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  margin: auto;
+  z-index: 100;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   width: min(560px, calc(100vw - 40px));
+  height: fit-content;
   max-height: 90dvh;
   overflow-y: auto;
   padding: 22px;
@@ -3003,13 +3004,13 @@ textarea.input {
 }
 @keyframes pop {
   from {
-    transform: translate(-50%, -46%) scale(0.95);
+    transform: scale(0.95);
     opacity: 0;
   }
 }
 @keyframes pop-out {
   to {
-    transform: translate(-50%, -48%) scale(0.96);
+    transform: scale(0.96);
     opacity: 0;
   }
 }
