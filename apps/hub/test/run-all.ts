@@ -29,6 +29,7 @@ const SUITES = [
   "guards",
   "isolation",
   "ratelimit",
+  "pagination",
 ];
 
 const API = process.env.HUB_API ?? "";
