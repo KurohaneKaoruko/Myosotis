@@ -91,6 +91,7 @@ const paths: Record<string, ReactNode> = {
   check: P("M4.5 12.5 10 18 19.5 6.5"),
   menu: P("M4 7h16M4 12h16M4 17h16"),
   down: P("M6 9l6 6 6-6"),
+  up: P("M6 15l6-6 6 6"),
   dots: (
     <>
       {P("M5 12h.01")}

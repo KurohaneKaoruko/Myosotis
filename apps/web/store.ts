@@ -200,6 +200,12 @@ interface AppState {
   agents: Agent[];
   convos: Conversation[];
   messages: ChatMessage[]; // messages of the active conversation
+  /** true when older messages exist beyond the loaded window (long conversations) */
+  hasMoreMessages: boolean;
+  loadingOlder: boolean;
+  /** live-sync health: ok / reconnecting (SSE retrying) / offline (browser offline) */
+  connState: "ok" | "reconnecting" | "offline";
+  loadOlder: () => Promise<void>;
   scenarios: Scenario[];
   settings: Settings;
   ready: boolean;
@@ -342,6 +348,9 @@ export const useStore = create<AppState>()(
       agents: [],
       convos: [],
       messages: [],
+  hasMoreMessages: false,
+  loadingOlder: false,
+  connState: "ok",
       scenarios: [],
       settings: DEFAULT_SETTINGS,
       ready: false,
@@ -714,18 +723,27 @@ export const useStore = create<AppState>()(
         return convo.id;
       },
       async openConversation(id) {
+        const PAGE = 80;
         let messages: ChatMessage[];
+        let hasMore = false;
         if (getDbMode() === "remote") {
-          messages = await remoteDB.loadMessages(id);
+          messages = await remoteDB.loadMessages(id, { limit: PAGE });
         } else {
-          messages = await db.messages.where("conversationId").equals(id).sortBy("createdAt");
+          const all = await db.messages.where("conversationId").equals(id).sortBy("createdAt");
+          all.sort((a, b) => a.createdAt - b.createdAt);
+          if (all.length > PAGE) {
+            messages = all.slice(-PAGE);
+            hasMore = true;
+          } else {
+            messages = all;
+          }
         }
         messages.sort((a, b) => a.createdAt - b.createdAt);
         // capture the Telegram-style "new messages" divider position before
         // the unread count is cleared (the count itself lives on convos)
         const unread = get().convos.find((c) => c.id === id)?.unread ?? 0;
         const markerMsg = unread > 0 && messages.length >= unread ? messages[messages.length - unread] : null;
-        set({ activeConvoId: id, messages, view: "chat", sidebarOpen: false, unreadMarker: markerMsg?.id ?? null });
+        set({ activeConvoId: id, messages, hasMoreMessages: hasMore, view: "chat", sidebarOpen: false, unreadMarker: markerMsg?.id ?? null });
         // clear the unread badge (server-side, so all devices agree)
         if (getDbMode() === "remote") {
           clearUnread(id);
@@ -738,6 +756,34 @@ export const useStore = create<AppState>()(
           set((s: any) => ({ convos: s.convos.map((c: Conversation) => (c.id === id ? { ...c, unread: 0 } : c)) }));
         }
       },
+      async loadOlder() {
+        const { activeConvoId, messages, hasMoreMessages, loadingOlder } = get();
+        if (!activeConvoId || !hasMoreMessages || loadingOlder) return;
+        const PAGE = 80;
+        const oldest = messages[0]?.createdAt;
+        if (!oldest) return;
+        set({ loadingOlder: true });
+        try {
+          if (getDbMode() === "remote") {
+            // fetch one extra so we can tell whether older messages remain
+            const older = await remoteDB.loadMessages(activeConvoId, { limit: PAGE + 1, before: oldest });
+            const hasMore = older.length > PAGE;
+            const window = hasMore ? older.slice(older.length - PAGE) : older;
+            set((s: any) => ({ messages: [...window, ...messages], hasMoreMessages: hasMore, loadingOlder: false }));
+          } else {
+            const older = await db.messages
+              .where("conversationId").equals(activeConvoId)
+              .and((m) => m.createdAt < oldest)
+              .sortBy("createdAt");
+            const hasMore = older.length > PAGE + 1;
+            const window = hasMore ? older.slice(older.length - PAGE) : older;
+            set((s: any) => ({ messages: [...window, ...messages], hasMoreMessages: hasMore, loadingOlder: false }));
+          }
+        } catch {
+          set({ loadingOlder: false });
+        }
+      },
+
       async deleteConversation(id) {
         if (getDbMode() === "remote") {
           await fetch(apiBase() + `/api/conversations/${encodeURIComponent(id)}`, {

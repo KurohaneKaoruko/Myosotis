@@ -8,6 +8,7 @@ import Composer, { filesToDataUrls } from "./Composer";
 import ScenarioEditor from "./ScenarioEditor";
 import GroupEditor from "./GroupEditor";
 import { t, tf, dateLocale } from "../i18n";
+import { getDbMode } from "../lib/db";
 import type { Agent, ChatMessage, Scenario } from "@myosotis/core";
 
 function isSameDay(a: number, b: number): boolean {
@@ -30,6 +31,10 @@ export default function ChatView() {
   const convos = useStore((s) => s.convos);
   const agents = useStore((s) => s.agents);
   const messages = useStore((s) => s.messages);
+  const hasMoreMessages = useStore((s) => s.hasMoreMessages);
+  const loadingOlder = useStore((s) => s.loadingOlder);
+  const loadOlder = useStore((s) => s.loadOlder);
+  const connState = useStore((s) => s.connState);
   const activeConvoId = useStore((s) => s.activeConvoId);
   const streamingConvoId = useStore((s) => s.streamingConvoId);
   const streamingAgentId = useStore((s) => s.streamingAgentId);
@@ -351,6 +356,10 @@ export default function ChatView() {
         />
       </header>
 
+      {connState !== "ok" && getDbMode() === "remote" && (
+        <div className="conn-banner">{connState === "offline" ? t("connOffline") : t("connReconnecting")}</div>
+      )}
+
       {searchOpen && (
         <div className="msg-search">
           <Icon name="search" size={15} />
@@ -428,6 +437,12 @@ export default function ChatView() {
           </div>
         )}
         <div className="msg-list">
+          {hasMoreMessages && (
+            <button className="load-older" onClick={() => void loadOlder()} disabled={loadingOlder}>
+              {loadingOlder ? t("loadingOlder") : t("loadOlder")}
+              {!loadingOlder && <Icon name="up" size={13} />}
+            </button>
+          )}
           {messages.map((m, i) => {
             const prev = messages[i - 1];
             const showDate = !prev || !isSameDay(prev.createdAt, m.createdAt);

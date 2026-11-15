@@ -46,10 +46,26 @@ export interface TurnCallbacks {
 }
 
 /** list conversation messages ordered by createdAt */
-export function listMessages(db: HubDB, userId: string, convoId: string): ChatMessage[] {
-  return (db.raw
-    .prepare("SELECT data FROM messages WHERE conversation_id = ? AND user_id = ? ORDER BY created_at ASC")
-    .all(convoId, userId) as any[]).map((r) => JSON.parse(r.data) as ChatMessage);
+export function listMessages(
+  db: HubDB,
+  userId: string,
+  convoId: string,
+  opts?: { limit?: number; before?: number }
+): ChatMessage[] {
+  // pagination: ?limit=N returns the N most recent messages;
+  // ?before=<epoch-ms> returns messages strictly older than that
+  // (combined with limit → the "load earlier" pager). Default: all.
+  const limit = opts?.limit ?? 0;
+  const before = opts?.before ?? 0;
+  const rows = db.raw
+    .prepare(
+      `SELECT data, created_at FROM messages
+       WHERE conversation_id = ? AND user_id = ? ${before ? "AND created_at < ?" : ""}
+       ORDER BY created_at ASC`
+    )
+    .all(...(before ? [convoId, userId, before] : [convoId, userId])) as any[];
+  const all = rows.map((r) => JSON.parse(r.data) as ChatMessage);
+  return limit > 0 && all.length > limit ? all.slice(-limit) : all;
 }
 
 function touchConvo(db: HubDB, userId: string, convo: Conversation, lastText: string): Conversation {

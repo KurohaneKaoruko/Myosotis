@@ -68,6 +68,23 @@ export default function App() {
     applyTheme(settings);
   }, [settings.themeId, settings.themeMode, settings]);
 
+  // offline / reconnect state for the connection banner
+  useEffect(() => {
+    const goOffline = () => useStore.setState({ connState: "offline" });
+    const goOnline = () => {
+      // remote mode: live.ts will reconnect and flip to "ok"; until then show reconnecting
+      if (useStore.getState().connState === "offline") {
+        useStore.setState({ connState: "reconnecting" });
+      }
+    };
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
   // browser tab badge: total unread count, like mainstream chat apps
   useEffect(() => {
     const unread = convos.reduce((n, c) => n + (c.unread ?? 0), 0);

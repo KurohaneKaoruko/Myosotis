@@ -414,7 +414,9 @@ app.delete("/api/conversations/:id", async (req: any, res: any) => {
 app.get("/api/conversations/:id/messages", async (req: any, res: any) => {
 
   if (!db.ownsRow(req.userId, "conversations", req.params.id)) return res.status(404).send({ error: "not-found" });
-  return listMessages(db, req.userId, req.params.id);
+  const limit = Number(req.query.limit) || 0;
+  const before = Number(req.query.before) || 0;
+  return listMessages(db, req.userId, req.params.id, { limit, before });
 });
 
 app.put("/api/conversations/:id/messages/:mid", async (req: any, res: any) => {

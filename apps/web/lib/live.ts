@@ -14,6 +14,13 @@ let source: EventSource | null = null;
 let retry = 0;
 let closedByUser = false;
 
+/** connection health, surfaced in the UI as a banner when degraded */
+export function setConnState(state: "ok" | "reconnecting" | "offline") {
+  const cur = useStore.getState().connState;
+  if (cur === state) return;
+  useStore.setState({ connState: state });
+}
+
 /**
  * Unread state lives on the conversation objects in the store (the
  * server computes the initial counts, live events bump them), so
@@ -135,6 +142,7 @@ export function connectLive() {
   es.onerror = () => {
     es.close();
     source = null;
+    setConnState("reconnecting");
     if (closedByUser) return;
     // exponential backoff, capped
     retry = Math.min(retry + 1, 6);
@@ -145,6 +153,7 @@ export function connectLive() {
 
   es.onopen = () => {
     retry = 0;
+    setConnState("ok");
   };
 }
 

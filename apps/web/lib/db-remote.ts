@@ -204,8 +204,14 @@ class RemoteDB {
   }
 
   /** conversation messages are fetched on open (can be huge) */
-  async loadMessages(convoId: string): Promise<ChatMessage[]> {
-    const msgs = await jfetch<ChatMessage[]>(`/api/conversations/${encodeURIComponent(convoId)}/messages`);
+  async loadMessages(convoId: string, opts?: { limit?: number; before?: number }): Promise<ChatMessage[]> {
+    const qs = new URLSearchParams();
+    if (opts?.limit) qs.set("limit", String(opts.limit));
+    if (opts?.before) qs.set("before", String(opts.before));
+    const q = qs.toString();
+    const msgs = await jfetch<ChatMessage[]>(
+      `/api/conversations/${encodeURIComponent(convoId)}/messages${q ? `?${q}` : ""}`
+    );
     for (const m of msgs) this.messages.cache.set(m.id, m);
     return msgs;
   }
