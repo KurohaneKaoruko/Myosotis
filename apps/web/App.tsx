@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Toaster } from "sonner";
 import { setLanguage } from "./i18n";
 import { useStore, applyTheme } from "./store";
@@ -12,7 +12,11 @@ import TitleBar from "./components/TitleBar";
 import CommandPalette from "./components/CommandPalette";
 import LoginView from "./components/LoginView";
 import { ConfirmHost, Icon, Tip, TipFor, type IconName } from "./components/ui";
-import { t } from "./i18n";
+import { t, tf } from "./i18n";
+import type { Dict } from "./i18n/zh-CN";
+import { listRemoteModels, friendlyError } from "@myosotis/core";
+import type { Protocol } from "@myosotis/core";
+import { TEMPLATE_GROUPS } from "./components/SettingsView";
 import { fetchMe } from "./lib/auth";
 import { getDbMode, setDbMode, isHubHosted } from "./lib/db";
 
@@ -20,12 +24,21 @@ export default function App() {
   const [palette, setPalette] = useState(false);
   const ready = useStore((s) => s.ready);
   const view = useStore((s) => s.view);
-  const providers = useStore((s) => s.providers);
   const settings = useStore((s) => s.settings);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   // subscribed here so the tab badge / document title react to live unread events
   const convos = useStore((s) => s.convos);
   const init = useStore((s) => s.init);
+  // First-run gate: snapshot once on mount. Onboarding's own provider
+  // setup mutates `providers`; a live selector would flip this gate and
+  // unmount the wizard mid-setup (the wizard kills itself the moment
+  // its "connect" button succeeds).
+  const [firstRun, setFirstRun] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (!ready || firstRun !== null) return;
+    setFirstRun(!settings.onboardingDone && useStore.getState().providers.length === 0 && getDbMode() !== "remote");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, firstRun]);
   // hub mode gate: null = deciding, false = show login, true = session ok
   const [hubAuthed, setHubAuthed] = useState<boolean | null>(null);
 
@@ -222,7 +235,9 @@ export default function App() {
     );
   }
 
-  if (!settings.onboardingDone && providers.length === 0 && getDbMode() !== "remote") {
+  if (settings.onboardingDone) {
+    // wizard finished (or veteran user): fall through to the app
+  } else if (firstRun) {
     return <Onboarding />;
   }
   return (
@@ -309,61 +324,242 @@ function TabBar() {
 // ----------------------------------------------------------------
 // First-launch welcome
 // ----------------------------------------------------------------
+/**
+ * First-run wizard. Step 0 configures a real provider (pick a template,
+ * paste the key, fetch models live); step 1 names your first agent and
+ * lands you in a working chat. "Skip" always remains one click away.
+ */
 function Onboarding() {
   const setSettings = useStore((s) => s.setSettings);
   const setView = useStore((s) => s.setView);
+  const providers = useStore((s) => s.providers);
+  const models = useStore((s) => s.models);
+  const [step, setStep] = useState<0 | 1 | 2>(providers.length > 0 ? 1 : 0);
+
   const finish = (go: "settings" | "chat") => {
     setSettings({ onboardingDone: true });
     setView(go);
   };
+
   return (
     <div className="app">
       <main className="main">
         <div className="onboard">
-          <div className="onboard-card">
+          <div className="onboard-card" style={{ maxWidth: step === 0 ? 520 : 460 }}>
             <img className="logo" src="logo.png" alt="Myosotis" />
             <h1>{t("obTitle")}</h1>
-            <div className="sub">
-              {t("obSlogan")}
-              <br />
-              {t("obSub")}
+            <div className="ob-progress" aria-hidden>
+              {[0, 1].map((i) => (
+                <span key={i} className={i <= step ? "on" : ""} />
+              ))}
             </div>
-            <div className="steps">
-              <div className="step">
-                <div className="n">1</div>
-                <div>
-                  <div className="t">{t("obStep1")}</div>
-                  <div className="d">{t("obStep1d")}</div>
+            {step === 0 ? (
+              <>
+                <div className="sub">
+                  {t("obSlogan")}
+                  <br />
+                  {t("obSub")}
                 </div>
-              </div>
-              <div className="step">
-                <div className="n">2</div>
-                <div>
-                  <div className="t">{t("obStep2")}</div>
-                  <div className="d">{t("obStep2d")}</div>
-                </div>
-              </div>
-              <div className="step">
-                <div className="n">3</div>
-                <div>
-                  <div className="t">{t("obStep3")}</div>
-                  <div className="d">{t("obStep3d")}</div>
-                </div>
-              </div>
-            </div>
-            <button className="btn primary" style={{ width: "100%", padding: "13px" }} onClick={() => finish("settings")}>
-              {t("obCta")}
-            </button>
-            <button
-              className="btn ghost"
-              style={{ width: "100%", marginTop: 10 }}
-              onClick={() => finish("chat")}
-            >
-              {t("obBrowse")}
-            </button>
+                <OnboardProviderStep onNext={() => setStep(1)} onSkip={() => finish("chat")} />
+              </>
+            ) : (
+              <OnboardAgentStep
+                providersCount={providers.length}
+                modelsCount={models.length}
+                onDone={() => finish("chat")}
+                onBack={() => setStep(0)}
+              />
+            )}
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+/** Step 0 — provider quick setup, reusing the settings-page machinery. */
+function OnboardProviderStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => void }) {
+  const addProvider = useStore((s) => s.addProvider);
+  const addModels = useStore((s) => s.addModels);
+  const showToast = useStore((s) => s.showToast);
+  const [protocol, setProtocol] = useState<Protocol>("openai");
+  const [name, setName] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [remote, setRemote] = useState<{ id: string; label: string }[] | null>(null);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const createdProviderId = useRef<string>("");
+  const placeholder = protocol === "openai" ? "https://api.openai.com/v1" : protocol === "anthropic" ? "https://api.anthropic.com" : "https://generativelanguage.googleapis.com";
+
+  const applyTemplate = (tpl: { name: string; protocol: Protocol; baseUrl: string }) => {
+    setProtocol(tpl.protocol);
+    setBaseUrl(tpl.baseUrl);
+    if (!name.trim()) setName(tpl.name);
+  };
+
+  const connect = async () => {
+    if (!apiKey.trim() || !baseUrl.trim()) {
+      showToast(t("obNeedKeyUrl"), "error");
+      return;
+    }
+    setLoading(true);
+    try {
+      const p = await addProvider({
+        name: name.trim() || t("customProvider"),
+        protocol,
+        baseUrl: baseUrl.trim(),
+        apiKey: apiKey.trim(),
+        keys: [],
+      });
+      createdProviderId.current = p.id;
+      const list = await listRemoteModels(p);
+      setRemote(list);
+      setPicked(new Set());
+      showToast(tf("fetchOk", { n: list.length }), "success");
+    } catch (e) {
+      showToast(`${friendlyError(e)}\n${t("savedCanManual")}`, "error");
+      setRemote([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const togglePickOb = (id: string) => {
+    const next = new Set(picked);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setPicked(next);
+  };
+
+  const confirmModels = async () => {
+    const p = useStore.getState().providers.find((x) => x.id === createdProviderId.current);
+    if (!p) return;
+    const ids = picked.size ? Array.from(picked) : remote?.slice(0, 3).map((m) => m.id) ?? [];
+    if (ids.length) await addModels(p.id, ids, []);
+    onNext();
+  };
+
+  return (
+    <div className="ob-form">
+      <div className="field">
+        <label>{t("quickPick")}</label>
+        <div className="chips">
+          {TEMPLATE_GROUPS.flatMap((g) => g.items).map((tpl) => (
+            <button key={tpl.name} className={`chip ${baseUrl === tpl.baseUrl ? "on" : ""}`} onClick={() => applyTemplate(tpl)}>
+              {tpl.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="field">
+        <label>{t("apiKey")}</label>
+        <input
+          className="input"
+          type="password"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="sk-…"
+          autoComplete="off"
+        />
+      </div>
+      <div className="field">
+        <label>{t("baseUrl")}</label>
+        <input className="input" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder={placeholder} />
+      </div>
+      {remote === null ? (
+        <>
+          <button className="btn primary" style={{ width: "100%" }} onClick={connect} disabled={loading}>
+            {loading ? t("connecting") : t("obConnect")}
+          </button>
+          <button className="btn ghost" style={{ width: "100%", marginTop: 10 }} onClick={onSkip}>
+            {t("obBrowse")}
+          </button>
+        </>
+      ) : (
+        <>
+          <div className="ob-models">
+            {remote.length === 0 ? (
+              <div className="ob-models-empty">{t("noModelsFound")}</div>
+            ) : (
+              remote.slice(0, 24).map((m) => (
+                <div key={m.id} className="remote-item" onClick={() => togglePickOb(m.id)}>
+                  <div className={`checkbox ${picked.has(m.id) ? "on" : ""}`}>{picked.has(m.id) && "✓"}</div>
+                  <div className="name" title={m.id}>
+                    {m.label}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <button className="btn primary" style={{ width: "100%" }} onClick={confirmModels} disabled={loading}>
+            {t("obNextAgent")}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// inside OnboardProviderStep
+
+/** Step 1 — name the first agent and drop the user into a live chat. */
+function OnboardAgentStep({
+  providersCount,
+  modelsCount,
+  onDone,
+  onBack,
+}: {
+  providersCount: number;
+  modelsCount: number;
+  onDone: () => void;
+  onBack: () => void;
+}) {
+  const createAgent = useStore((s) => s.createAgent);
+  const updateAgent = useStore((s) => s.updateAgent);
+  const openOrCreate = useStore((s) => s.openOrCreateConversation);
+  const setEditingAgentId = useStore((s) => s.setEditingAgentId);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const ready = providersCount > 0 && modelsCount > 0;
+
+  const start = async () => {
+    setBusy(true);
+    try {
+      const agent = await createAgent();
+      const n = name.trim();
+      if (n) await updateAgent(agent.id, { name: n });
+      setEditingAgentId(null);
+      await openOrCreate(agent.id);
+      onDone();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="sub">{ready ? t("ob2Ready") : t("ob2NoModels")}</div>
+      <div className="field" style={{ textAlign: "left" }}>
+        <label>{t("ob2Name")}</label>
+        <input
+          className="input"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder={t("ob2NamePh")}
+          maxLength={24}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !busy) void start();
+          }}
+        />
+      </div>
+      <button className="btn primary" style={{ width: "100%", padding: "13px" }} onClick={start} disabled={busy}>
+        {t("ob2Start")}
+      </button>
+      <button className="btn ghost" style={{ width: "100%", marginTop: 10 }} onClick={onBack}>
+        {t("ob2Back")}
+      </button>
+    </>
   );
 }

@@ -1061,6 +1061,67 @@ button {
   color: var(--text-3);
 }
 
+/* onboarding wizard */
+.ob-progress {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin: -10px 0 18px;
+}
+.ob-progress span {
+  width: 34px;
+  height: 3px;
+  background: var(--border);
+  transition: background var(--dur) var(--ease);
+}
+.ob-progress span.on {
+  background: var(--accent);
+}
+.ob-form {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ob-models {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+.ob-models .remote-item {
+  padding: 8px 12px;
+}
+.ob-models-empty {
+  padding: 18px 12px;
+  text-align: center;
+  color: var(--text-3);
+  font-size: 12.5px;
+}
+
+/* settings stats strip */
+.stats-card {
+  display: flex;
+  justify-content: space-around;
+  padding: 16px 8px;
+}
+.stat-cell {
+  text-align: center;
+}
+.stat-cell .n {
+  font-family: var(--mono);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+.stat-cell .k {
+  margin-top: 2px;
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
 /* quote-jump landing flash */
 [data-msg-id].flash {
   animation: quote-flash 1.4s var(--ease-out);

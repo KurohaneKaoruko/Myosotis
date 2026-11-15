@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useStore } from "../store";
 import { db } from "../lib/db";
@@ -11,13 +11,13 @@ import type { ModelConfig, ModelRole, Protocol, Provider, ThemeId, ThemeMode } f
 import { t, tf, dateLocale } from "../i18n";
 import type { Dict } from "../i18n/zh-CN";
 
-const PROTOCOL_LABELS: Record<Protocol, keyof Dict> = {
+export const PROTOCOL_LABELS: Record<Protocol, keyof Dict> = {
   openai: "protoOpenai",
   anthropic: "protoAnthropic",
   gemini: "protoGemini",
 };
 
-const TEMPLATE_GROUPS: { labelKey: keyof Dict; items: { name: string; protocol: Protocol; baseUrl: string }[] }[] = [
+export const TEMPLATE_GROUPS: { labelKey: keyof Dict; items: { name: string; protocol: Protocol; baseUrl: string }[] }[] = [
   {
     labelKey: "groupHot",
     items: [
@@ -108,6 +108,7 @@ export default function SettingsView() {  return (
         <ServerCard />
         <BackupCard />
         <DataCard />
+        <StatsCard />
         <div className="card" style={{ textAlign: "center", color: "var(--text-3)", fontSize: 12, lineHeight: 1.9 }}>
           <div>{t("aboutLine")}</div>
           <div>{t("aboutLicense")}</div>
@@ -1105,6 +1106,41 @@ function ProfileCard() {
 // ================================================================
 // Backup
 // ================================================================
+/** At-a-glance usage totals, placed above the version footer. */
+function StatsCard() {
+  const convos = useStore((s) => s.convos);
+  const agents = useStore((s) => s.agents);
+  const memoryRev = useStore((s) => s.memoryRev);
+  const [memoryCount, setMemoryCount] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    db.memories.toArray().then((items) => {
+      if (!cancelled) setMemoryCount(items.length);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [memoryRev]);
+
+  const msgTotal = convos.reduce((sum, c) => sum + (c.messageCount || 0), 0);
+  const stats: { key: keyof Dict; n: number | null }[] = [
+    { key: "statConvos", n: convos.length },
+    { key: "statMessages", n: msgTotal },
+    { key: "statAgents", n: agents.length },
+    { key: "statMemories", n: memoryCount },
+  ];
+  return (
+    <div className="card stats-card">
+      {stats.map((s) => (
+        <div key={s.key} className="stat-cell">
+          <div className="n">{s.n ?? "—"}</div>
+          <div className="k">{t(s.key)}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function DataCard() {
   const backup = useStore((s) => s.backup);
   const restore = useStore((s) => s.restore);
