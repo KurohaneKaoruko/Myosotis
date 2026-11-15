@@ -31,7 +31,7 @@ const zhCN = {
   noAgentsTitle: "还没有智能体",
   noAgentsDesc: "先创建一个属于你的智能体吧",
   createAgent: "创建智能体",
-  unconfiguredModel: "⚠ 未配置模型 · 点击设置",
+  unconfiguredModel: "MODEL_UNSET // 点击设置",
   agentSettingsTip: "智能体设定",
   searchTip: "搜索对话",
   moreTip: "更多",

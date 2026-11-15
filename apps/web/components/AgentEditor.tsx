@@ -308,7 +308,9 @@ function EditorBody({ agentId }: { agentId: string }) {
       )}
       {agentScenarios.map((s) => (
         <div key={s.id} className="provider-card" style={{ marginBottom: 8 }}>
-          <div className="logo" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>📖</div>
+          <div className="logo" style={{ background: "var(--accent-soft)", color: "var(--accent)" }}>
+            <Icon name="book" size={20} />
+          </div>
           <div className="info">
             <div className="name">{s.name}</div>
             <div className="meta">{tf("nEvents", { n: s.events.length })}</div>

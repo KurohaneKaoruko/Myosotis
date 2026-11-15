@@ -30,7 +30,7 @@ const en: Partial<Dict> = {
   noAgentsTitle: "No agents yet",
   noAgentsDesc: "Create your own agent first",
   createAgent: "Create agent",
-  unconfiguredModel: "⚠ No model · tap to configure",
+  unconfiguredModel: "MODEL_UNSET // tap to configure",
   agentSettingsTip: "Agent settings",
   searchTip: "Search conversation",
   moreTip: "More",

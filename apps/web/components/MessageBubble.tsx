@@ -292,6 +292,13 @@ export default function MessageBubble({
         ))}
       <div className="body">
         {!isUser && showName && <div className="msg-name">{agent.name}</div>}
+        {/* rosmarin: timestamp as always-visible mono metadata (hidden while streaming/editing) */}
+        {streaming === undefined && !editing && (
+          <div className={`msg-meta ${isUser ? "right" : ""}`}>
+            <span>{formatTime(msg.createdAt)}</span>
+            {isUser && msg.status === "error" && <span className="meta-err">FAILED</span>}
+          </div>
+        )}
         {selectable && (
           <div className={`checkbox ${selected ? "on" : ""}`} style={{ marginBottom: 4 }}>
             {selected && "✓"}
@@ -372,7 +379,6 @@ export default function MessageBubble({
         {/* desktop hover strip (pointer devices only — touch uses the sheet) */}
         {streaming === undefined && !editing && (
           <div className="acts" style={isUser ? { justifyContent: "flex-end" } : undefined}>
-            <span className="time">{formatTime(msg.createdAt)}</span>
             {actions
               .filter((a) => a.key !== "delete")
               .map((a) => (
@@ -390,10 +396,6 @@ export default function MessageBubble({
           </div>
         )}
 
-        {/* quiet timestamp for grouped/compact view */}
-        {streaming === undefined && grouped && !editing && (
-          <div className={`time-float ${isUser ? "right" : ""}`}>{formatTime(msg.createdAt)}</div>
-        )}
       </div>
 
       {/* touch / right-click action sheet */}

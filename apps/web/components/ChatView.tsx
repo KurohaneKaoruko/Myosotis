@@ -226,7 +226,7 @@ export default function ChatView() {
             {isGroup ? convo.title : agent!.name}
             {storyScenario && (
               <span className="story-badge" title={tf("storyBadgeTip", { name: storyScenario.name })}>
-                📖 {storyScenario.name}
+                {storyScenario.name}
               </span>
             )}
           </div>
@@ -571,7 +571,9 @@ export default function ChatView() {
                 setStoryPicker(false);
               }}
             >
-              <div className="logo">📖</div>
+              <div className="logo" style={{ color: "var(--accent)" }}>
+                <Icon name="book" size={20} />
+              </div>
               <div className="info">
                 <div className="name">{s.name}</div>
                 <div className="meta">{tf("nEvents", { n: s.events.length })}</div>
