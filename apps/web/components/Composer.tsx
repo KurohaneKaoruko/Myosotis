@@ -560,6 +560,11 @@ export default function Composer() {
             onPaste={onPaste}
             disabled={!activeConvoId}
           />
+          {text.length > 0 && (
+            <span className={`char-count ${text.length > 8000 ? "over" : ""}`} aria-hidden>
+              {text.length > 9999 ? "9.9k" : text.length}
+            </span>
+          )}
         </div>
         <button
           className={`tool ${voiceChat ? "active" : ""}`}

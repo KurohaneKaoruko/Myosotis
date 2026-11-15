@@ -51,6 +51,7 @@ export default function Sidebar() {
   const openOrCreateConversation = useStore((s) => s.openOrCreateConversation);
   const createAgent = useStore((s) => s.createAgent);
   const pinConversation = useStore((s) => s.pinConversation);
+  const renameConversation = useStore((s) => s.renameConversation);
   const archiveConversation = useStore((s) => s.archiveConversation);
   const duplicateConversation = useStore((s) => s.duplicateConversation);
   const deleteConversation = useStore((s) => s.deleteConversation);
@@ -60,6 +61,7 @@ export default function Sidebar() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const [tagging, setTagging] = useState<Conversation | null>(null);
+  const [renaming, setRenaming] = useState<Conversation | null>(null);
   const [groupEditorOpen, setGroupEditorOpen] = useState(false);
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
 
@@ -229,6 +231,11 @@ export default function Sidebar() {
               label: convo.pinned ? t("pinOff") : t("pinOn"),
               icon: "pin" as const,
               onClick: () => pinConversation(convo.id, !convo.pinned),
+            },
+            {
+              label: t("renameConvo"),
+              icon: "edit" as const,
+              onClick: () => setRenaming(convo),
             },
             {
               label: convo.archived ? t("unarchive") : t("archive"),
@@ -509,6 +516,21 @@ export default function Sidebar() {
       <div className="sidebar-foot">
         <span>{getDbMode() === "remote" ? `SYNC // ${t("dataSynced")}` : `LOCAL // ${t("dataLocalOnly")}`}</span>
       </div>
+
+      {renaming && (
+        <PromptModal
+          title={t("renameConvo")}
+          label={t("renameConvoLabel")}
+          initial={renaming.title === t("newChat") ? "" : renaming.title}
+          placeholder={t("renameConvoPh")}
+          onConfirm={(v) => {
+            const name = v.trim();
+            if (name) void renameConversation(renaming.id, name);
+            setRenaming(null);
+          }}
+          onClose={() => setRenaming(null)}
+        />
+      )}
 
       {tagging && (
         <PromptModal

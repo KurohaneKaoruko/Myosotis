@@ -9,6 +9,7 @@ import MemoryView from "./components/MemoryView";
 import SettingsView from "./components/SettingsView";
 import AgentEditor from "./components/AgentEditor";
 import TitleBar from "./components/TitleBar";
+import CommandPalette from "./components/CommandPalette";
 import LoginView from "./components/LoginView";
 import { ConfirmHost, Icon, Tip, TipFor, type IconName } from "./components/ui";
 import { t } from "./i18n";
@@ -16,6 +17,7 @@ import { fetchMe } from "./lib/auth";
 import { getDbMode, setDbMode, isHubHosted } from "./lib/db";
 
 export default function App() {
+  const [palette, setPalette] = useState(false);
   const ready = useStore((s) => s.ready);
   const view = useStore((s) => s.view);
   const providers = useStore((s) => s.providers);
@@ -102,16 +104,18 @@ export default function App() {
     setLanguage(settings.language ?? "zh-CN");
   }, [settings.fontSize, settings.language, settings.bubbleStyle]);
 
-  // global shortcuts: Ctrl/Cmd+K focuses search
+  // global shortcuts: Ctrl/Cmd+K command palette, Ctrl/Cmd+F in-chat search
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        useStore.getState().setView("chat");
-        useStore.getState().setSidebar(true);
-        requestAnimationFrame(() => {
-          document.querySelector<HTMLInputElement>(".search-box input")?.focus();
-        });
+        setPalette(true);
+      } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        // chat view only: focus the in-conversation search bar
+        const inChat = useStore.getState().view === "chat";
+        if (!inChat) return;
+        e.preventDefault();
+        document.querySelector<HTMLInputElement>(".msg-search input")?.focus();
       }
     };
     document.addEventListener("keydown", onKey);
@@ -235,6 +239,7 @@ export default function App() {
             {view === "settings" && <SettingsView />}
           </main>
           <AgentEditor />
+          {palette && <CommandPalette onClose={() => setPalette(false)} />}
           <TabBar />
           <ConfirmHostBridge />
         </div>

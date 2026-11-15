@@ -229,6 +229,7 @@ export function PromptModal({
   title,
   label,
   initial,
+  placeholder,
   onConfirm,
   onClose,
   confirmText = t("commonConfirm"),
@@ -236,6 +237,7 @@ export function PromptModal({
   title: string;
   label: string;
   initial?: string;
+  placeholder?: string;
   onConfirm: (value: string) => void;
   onClose: () => void;
   confirmText?: string;
@@ -251,7 +253,7 @@ export function PromptModal({
     }>
       <div className="field" style={{ marginBottom: 0 }}>
         <label>{label}</label>
-        <input id="prompt-input" className="input" defaultValue={initial} autoFocus
+        <input id="prompt-input" className="input" defaultValue={initial} placeholder={placeholder} autoFocus
           onKeyDown={(e) => { if (e.key === "Enter") onConfirm((e.target as HTMLInputElement).value); }} />
       </div>
     </Modal>
