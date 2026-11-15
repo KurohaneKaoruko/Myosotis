@@ -136,12 +136,42 @@ button {
   z-index: 35;
 }
 .rail-logo {
+  position: relative;
   padding: 4px 0 14px;
 }
 .rail-logo img {
   width: 34px;
   height: 34px;
   border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 3px;
+}
+.rail-no {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 8px;
+  letter-spacing: 1px;
+  color: var(--text-3);
+}
+.rail-no-tag {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.5px;
+  color: var(--text-3);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease);
+}
+.rail-btn:hover .rail-no-tag,
+.rail-btn.active .rail-no-tag {
+  opacity: 1;
+  color: var(--accent);
 }
 .rail-items {
   display: flex;
@@ -185,20 +215,6 @@ button {
   bottom: 8px;
   width: 2px;
   background: var(--accent);
-}
-.rail-dot {
-  position: absolute;
-  left: -8px;
-  top: 50%;
-  transform: translateY(-50%) scaleY(0);
-  width: 2px;
-  height: 18px;
-  border-radius: 0;
-  background: var(--accent);
-  transition: background var(--dur-fast) var(--ease);
-}
-.rail-btn.active .rail-dot {
-  transform: translateY(-50%) scaleY(1);
 }
 .rail-foot {
   display: flex;
@@ -520,7 +536,10 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
   color: var(--text-3);
 }
 
@@ -636,9 +655,9 @@ button {
 }
 .chat-head .sub::before {
   content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 0;
   background: var(--accent);
 }
 .chat-head .spacer {
@@ -2194,6 +2213,146 @@ button {
 .card:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
 }
+/* ============================================================
+   Rosmarin blueprint design system
+   编号 / 状态行 / 指示线 / 角落刻度 —— 工程图审美
+   ============================================================ */
+/* 交错入场：网格卡片/列表项按序淡入上移（20ms 步进，封顶 15 项） */
+@keyframes blueprint-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-inner > .card,
+.page-inner > .field,
+.stagger > * {
+  animation: blueprint-in 0.35s var(--ease-out) both;
+}
+.page-inner > .card:nth-child(2),
+.stagger > *:nth-child(1) { animation-delay: 20ms; }
+.page-inner > .card:nth-child(3),
+.stagger > *:nth-child(2) { animation-delay: 40ms; }
+.page-inner > .card:nth-child(4),
+.stagger > *:nth-child(3) { animation-delay: 60ms; }
+.page-inner > .card:nth-child(5),
+.stagger > *:nth-child(4) { animation-delay: 80ms; }
+.page-inner > .card:nth-child(6),
+.stagger > *:nth-child(5) { animation-delay: 100ms; }
+.page-inner > .card:nth-child(7),
+.stagger > *:nth-child(6) { animation-delay: 120ms; }
+.page-inner > .card:nth-child(8),
+.stagger > *:nth-child(7) { animation-delay: 140ms; }
+.page-inner > .card:nth-child(9),
+.stagger > *:nth-child(8) { animation-delay: 160ms; }
+.page-inner > .card:nth-child(n + 10),
+.stagger > *:nth-child(n + 9) { animation-delay: 180ms; }
+@media (prefers-reduced-motion: reduce) {
+  .page-inner > .card,
+  .stagger > * {
+    animation: none;
+  }
+}
+:root {
+  --mono-label: var(--mono);
+}
+
+/* 自动编号：设置/记忆页每张卡片左上角 01/02/03… */
+.page-inner {
+  counter-reset: cardno;
+}
+.page-inner .card {
+  counter-increment: cardno;
+}
+.page-inner .card::before {
+  content: counter(cardno, decimal-leading-zero);
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--accent);
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* 卡片 hover: 底部指示线从左划入（rosmarin 签名）—— 纯 CSS，background 线性渐变位移实现 */
+.page-inner .card::after {
+  border-width: 0 12px 12px 0;
+}
+.page-inner .card {
+  background:
+    linear-gradient(90deg, var(--accent) 50%, transparent 50%) no-repeat -100% 100% / 200% 2px,
+    var(--surface);
+  transition: border-color var(--dur) var(--ease), background-position 0.3s var(--ease-out);
+}
+.page-inner .card:hover {
+  background-position: 0% 100%, 0 0;
+}
+
+/* 卡片标题: 小型大写 + 宽字距 + 图标染 accent */
+.page-inner .card h3 {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-2);
+  gap: 7px;
+}
+.page-inner .card h3 svg {
+  color: var(--accent);
+}
+.page-inner .card h3 .hint {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: var(--mono);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+/* 幽灵水印编号（页面右上的大号淡数字，rosmarin hero 签名） */
+.watermark-no {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  font-family: var(--mono);
+  font-size: clamp(64px, 10vw, 120px);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text);
+  opacity: 0.04;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 页脚状态行: MODULES_TOTAL 式 mono 状态条 */
+.sysline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.sysline .ok {
+  color: var(--accent);
+}
+
+/* 卡片 h3 */
 .card h3 {
   font-size: 15px;
   margin-bottom: 14px;
@@ -2321,7 +2480,7 @@ textarea.input {
 .chip {
   border: 1px solid var(--border);
   background: var(--surface-2);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   padding: 6px 14px;
   font-size: 13px;
   cursor: pointer;
@@ -3030,11 +3189,14 @@ textarea.input {
   max-width: 460px;
 }
 .empty-chat .ec-tips span {
-  font-size: 12px;
+  font-size: 10px;
+  font-family: var(--mono);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
   color: var(--text-3);
   padding: 6px 13px;
   border-radius: var(--radius-sm);
-  background: var(--surface-2);
+  background: var(--surface);
   border: 1px solid var(--border);
 }
 
@@ -3683,18 +3845,54 @@ pre[data-lang]::before {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--bg-deep);
+  background-image: var(--bg-pattern), var(--bg-deep);
+  background-size: var(--bg-pattern-size), auto;
   z-index: 200;
 }
 .login-card {
+  position: relative;
   width: min(360px, calc(100vw - 48px));
   padding: 36px 32px 30px;
   border-radius: var(--radius-lg);
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
   text-align: center;
   animation: view-in var(--dur-slow) var(--ease-out);
+}
+/* rosmarin 角落刻度方块（brand 块左上/右下 4px 方点） */
+.corner-ticks span {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--border-strong);
+  transition: background var(--dur) var(--ease);
+}
+.corner-ticks span:first-child {
+  top: -1px;
+  left: -1px;
+}
+.corner-ticks span:last-child {
+  bottom: -1px;
+  right: -1px;
+}
+.login-card:hover .corner-ticks span {
+  background: var(--accent);
+}
+.login-no {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--accent);
+}
+.login-protocol {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 1.8px;
+  color: var(--text-3);
+  margin: -14px 0 20px;
 }
 .login-logo {
   font-size: 44px;

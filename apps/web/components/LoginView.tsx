@@ -49,9 +49,17 @@ export default function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
   return (
     <div className="login-wrap">
       <div className="login-card">
+        <div className="corner-ticks" aria-hidden>
+          <span />
+          <span />
+        </div>
+        <div className="login-no" aria-hidden>/01</div>
         <div className="login-logo">🌸</div>
         <h1>Myosotis</h1>
         <p className="login-sub">{phase === "setup" ? t("firstSetupHint") : t("welcomeBack")}</p>
+        <div className="login-protocol" aria-hidden>
+          AUTH_PROTOCOL_v3 // MYOSOTIS_CHAT
+        </div>
         <form onSubmit={submit}>
           <input
             autoFocus

@@ -17,14 +17,22 @@ export default function Rail() {
   return (
     <nav className="rail">
       <div className="rail-logo" data-tauri-drag-region>
+        <span className="rail-no" aria-hidden>
+          /00
+        </span>
         <img src="logo.png" alt="Myosotis" />
       </div>
       <div className="rail-items">
-        {RAIL_ITEMS.map((it) => (
+        {RAIL_ITEMS.map((it, i) => (
           <TipFor key={it.view} text={t(it.labelKey)}>
-            <button className={`rail-btn ${view === it.view ? "active" : ""}`} onClick={() => setView(it.view as any)}>
+            <button
+              className={`rail-btn ${view === it.view ? "active" : ""}`}
+              onClick={() => setView(it.view as any)}
+            >
               <Icon name={it.icon} size={21} />
-              <i className="rail-dot" />
+              <i className="rail-no-tag" aria-hidden>
+                {String(i + 1).padStart(2, "0")}
+              </i>
             </button>
           </TipFor>
         ))}

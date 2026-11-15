@@ -152,6 +152,7 @@ export default function MemoryView() {
   return (
     <div className="page">
       <div className="page-inner">
+        <span className="watermark-no" aria-hidden>02</span>
         <div className="page-title">
           {t("memoryTitle")}
           <span className="desc" style={{ fontWeight: 400 }}>
@@ -358,6 +359,13 @@ export default function MemoryView() {
             );
           })
         )}
+
+        <div className="sysline">
+          <span>MEMORY_GARDEN // GROWING</span>
+          <span>
+            ENTRIES_TOTAL: <span className="ok">{String(list.length).padStart(2, "0")}</span>
+          </span>
+        </div>
       </div>
 
       {editing && (

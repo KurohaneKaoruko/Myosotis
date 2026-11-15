@@ -91,6 +91,7 @@ function probeColor(r: ProbeResult | "loading"): string {
 export default function SettingsView() {  return (
     <div className="page">
       <div className="page-inner">
+        <span className="watermark-no" aria-hidden>10</span>
         <div className="page-title">
           {t("settingsTitle")}
           <span className="desc" style={{ fontWeight: 400 }}>
@@ -118,6 +119,12 @@ export default function SettingsView() {  return (
           >
             GNU GPL v3.0
           </a>
+        </div>
+        <div className="sysline">
+          <span>MYOSOTIS // ALL_SYSTEMS_OPERATIONAL</span>
+          <span>
+            MODULES_TOTAL: <span className="ok">10</span>
+          </span>
         </div>
       </div>
     </div>
