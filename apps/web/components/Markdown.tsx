@@ -172,5 +172,51 @@ export default function Markdown({ text, highlight }: { text: string; highlight?
     });
   }, [html]);
 
+  // @mentions in group chat: wrap "@Name" tokens in a highlight span.
+  // Text-node walk so code blocks / existing markup are never touched.
+  useEffect(() => {
+    const root = ref.current;
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node) {
+        const parent = (node as Text).parentElement;
+        if (!parent || parent.closest("pre, code, .mention")) return NodeFilter.FILTER_REJECT;
+        // cheap gate before the regex: only walk nodes that contain an @
+        return (node as Text).textContent?.includes("@") ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
+      },
+    });
+    const hits: { node: Text; ranges: [number, number][] }[] = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode as Text;
+      const text = node.textContent ?? "";
+      const ranges: [number, number][] = [];
+      const re = /@[\p{L}\p{N}_-]{1,24}/gu;
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(text))) {
+        // not a mention when the @ follows a word character (email@foo…)
+        const prev = m.index > 0 ? text[m.index - 1] : "";
+        if (prev && /[\p{L}\p{N}_@]/u.test(prev)) continue;
+        ranges.push([m.index, m.index + m[0].length]);
+      }
+      if (ranges.length) hits.push({ node, ranges });
+    }
+    if (!hits.length) return;
+    for (const { node, ranges } of hits) {
+      const text = node.textContent ?? "";
+      const frag = document.createDocumentFragment();
+      let pos = 0;
+      for (const [start, end] of ranges) {
+        if (start > pos) frag.appendChild(document.createTextNode(text.slice(pos, start)));
+        const span = document.createElement("span");
+        span.className = "mention";
+        span.textContent = text.slice(start, end);
+        frag.appendChild(span);
+        pos = end;
+      }
+      if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+      node.parentNode?.replaceChild(frag, node);
+    }
+  }, [html]);
+
   return <div ref={ref} className="md" dangerouslySetInnerHTML={{ __html: html }} />;
 }
