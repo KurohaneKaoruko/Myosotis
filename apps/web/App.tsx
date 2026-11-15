@@ -175,6 +175,15 @@ export default function App() {
     settings.themeMode === "dark" ||
     (settings.themeMode === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
 
+  // auto mode: follow live OS theme switches (was read once at mount)
+  useEffect(() => {
+    if (settings.themeMode !== "auto") return;
+    const mq = matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => applyTheme(useStore.getState().settings);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [settings.themeMode]);
+
   if (hubAuthed === null || (!ready && hubAuthed !== false)) {
     if (hubAuthed === null) {
       return (
