@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useStore } from "../store";
 import { db, getDbMode } from "../lib/db";
 import { MEMORY_KINDS, type MemoryItem, type MemoryKind } from "@myosotis/core";
+import BlueprintLogo from "./BlueprintLogo";
 import { Modal, Icon, SelectBox } from "./ui";
 import { t, tf } from "../i18n";
 
@@ -161,7 +162,9 @@ export default function MemoryView() {
         </div>
 
         <div className="card" style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-          <div style={{ fontSize: 28 }}>🌸</div>
+          <div style={{ fontSize: 28, display: "flex", color: "var(--accent)" }}>
+            <BlueprintLogo size={40} />
+          </div>
           <div style={{ fontSize: 13, color: "var(--text-2)", flex: 1, minWidth: 200 }}>
             {t("memoryIntro")}
             <b>{t("memoryControl")}</b>

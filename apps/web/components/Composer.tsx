@@ -509,7 +509,7 @@ export default function Composer() {
                   <span
                     className="mi-ava"
                     style={{
-                      background: `hsl(${a.hue} 52% 55%)`,
+                      background: `hsl(${a.hue} 30% 44%)`,
                     }}
                   >
                     {a.emoji}

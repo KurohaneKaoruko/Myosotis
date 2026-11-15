@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, Fragment, useState } from "react";
 import { useStore } from "../store";
 import { resolveModel } from "@myosotis/core";
 import { Avatar, Icon, Menu, Modal, SelectBox, TipFor } from "./ui";
+import BlueprintLogo from "./BlueprintLogo";
 import MessageBubble from "./MessageBubble";
 import Composer, { filesToDataUrls } from "./Composer";
 import ScenarioEditor from "./ScenarioEditor";
@@ -153,7 +154,9 @@ export default function ChatView() {
     const noAgents = agents.length === 0;
     return (
       <div className="empty-chat">
-        <div className="big">🌸</div>
+        <div className="big">
+          <BlueprintLogo size={72} />
+        </div>
         <div className="t">{noAgents ? t("noAgentsTitle") : t("pickConversation")}</div>
         <div className="d">
           {noAgents
@@ -208,7 +211,7 @@ export default function ChatView() {
               <span
                 key={a.id}
                 style={{
-                  background: `hsl(${a.hue} 52% 55%)`,
+                  background: `hsl(${a.hue} 30% 44%)`,
                 }}
               >
                 {a.emoji}

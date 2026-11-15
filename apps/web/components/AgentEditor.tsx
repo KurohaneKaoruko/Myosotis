@@ -207,7 +207,7 @@ function EditorBody({ agentId }: { agentId: string }) {
             width: 68,
             height: 68,
             borderRadius: 0,
-            background: `hsl(${form.hue} 52% 55%)`,
+            background: `hsl(${form.hue} 30% 44%)`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -231,7 +231,7 @@ function EditorBody({ agentId }: { agentId: string }) {
               min={0}
               max={359}
               value={form.hue ?? 260}
-              style={{ width: "100%", accentColor: `hsl(${form.hue} 62% 58%)` }}
+              style={{ width: "100%", accentColor: `hsl(${form.hue} 30% 44%)` }}
               onChange={(e) => set({ hue: Number(e.target.value) })}
             />
           </div>

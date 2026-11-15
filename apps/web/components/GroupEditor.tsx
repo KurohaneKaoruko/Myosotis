@@ -123,7 +123,7 @@ export default function GroupEditor({
                     height: 26,
                     fontSize: 14,
                     borderRadius: 6,
-                    background: `hsl(${a.hue} 52% 55%)`,
+                    background: `hsl(${a.hue} 30% 44%)`,
                   }}
                 >
                   {a.emoji}

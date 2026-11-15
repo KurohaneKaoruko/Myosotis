@@ -568,39 +568,42 @@ button {
   background-image: var(--bg-pattern);
   background-size: var(--bg-pattern-size);
 }
-/* chat wallpaper variants */
+/* chat wallpaper variants — engineering paper, not colored glow */
 .main[data-wallpaper="aurora"] {
+  /* fine 8px grid: dense drafting paper */
   background-image:
-    radial-gradient(640px 420px at 88% -6%, var(--accent-soft), transparent 64%),
-    radial-gradient(520px 380px at -4% 108%, var(--accent-soft), transparent 60%),
+    linear-gradient(color-mix(in srgb, var(--text) 3.5%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--text) 3.5%, transparent) 1px, transparent 1px),
     var(--bg-pattern);
-  background-size: auto, auto, var(--bg-pattern-size);
+  background-size: 8px 8px, 8px 8px, var(--bg-pattern-size);
 }
 .main[data-wallpaper="mesh"] {
+  /* 120px major grid with accent axis lines every 4th row */
   background-image:
-    linear-gradient(135deg, var(--accent-soft) 0%, transparent 35%, transparent 65%, var(--accent-soft) 100%),
+    linear-gradient(color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 7%, transparent) 1px, transparent 1px),
     var(--bg-pattern);
-  background-size: auto, var(--bg-pattern-size);
+  background-size: 120px 120px, 120px 120px, var(--bg-pattern-size);
 }
 .main[data-wallpaper="sakura"] {
-  background-image:
-    radial-gradient(760px 480px at 16% -8%, rgb(244 143 177 / 0.16), transparent 62%),
-    radial-gradient(620px 420px at 108% 34%, rgb(206 147 216 / 0.12), transparent 58%),
+  /* dot matrix: registration marks at 24px */
+  background-image: radial-gradient(color-mix(in srgb, var(--text) 7%, transparent) 1px, transparent 1.2px),
     var(--bg-pattern);
-  background-size: auto, auto, var(--bg-pattern-size);
+  background-size: 24px 24px, var(--bg-pattern-size);
 }
 .main[data-wallpaper="dusk"] {
+  /* blueprint crosses: survey marker grid */
   background-image:
-    linear-gradient(180deg, rgb(94 53 177 / 0.09), transparent 42%),
-    radial-gradient(900px 520px at 82% 112%, rgb(255 112 67 / 0.09), transparent 62%),
+    linear-gradient(color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 12%, transparent) 1px, transparent 1px),
     var(--bg-pattern);
-  background-size: auto, auto, var(--bg-pattern-size);
+  background-size: 64px 64px, 64px 64px, var(--bg-pattern-size);
 }
 .main[data-wallpaper="paper"] {
-  background-image:
-    radial-gradient(color-mix(in srgb, var(--text) 3.2%, transparent) 1px, transparent 1.4px),
+  /* ruled paper: horizontal lines only */
+  background-image: linear-gradient(color-mix(in srgb, var(--text) 4.5%, transparent) 1px, transparent 1px),
     var(--bg-pattern);
-  background-size: 22px 22px, var(--bg-pattern-size);
+  background-size: 28px 28px, var(--bg-pattern-size);
 }
 
 /* ============================================================
@@ -2564,9 +2567,9 @@ textarea.input {
 .swatch {
   width: 46px;
   height: 46px;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  border: 2.5px solid transparent;
+  border: 2px solid transparent;
   position: relative;
   transition: border-color var(--dur-fast) var(--ease);
 }
@@ -2577,17 +2580,14 @@ textarea.input {
   border-color: var(--text);
 }
 .swatch.on::after {
-  content: "✓";
+  content: "";
   position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 700;
-  text-shadow:
-    0 0 3px rgba(0, 0, 0, 0.9),
-    0 1px 4px rgba(0, 0, 0, 0.9);
+  right: -1px;
+  bottom: -1px;
+  width: 12px;
+  height: 12px;
+  background: var(--text);
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
 }
 
 /* provider cards */
@@ -3162,10 +3162,11 @@ textarea.input {
   position: relative;
 }
 .empty-chat .big {
-  font-size: 44px;
-  margin-bottom: 4px;
-  filter: grayscale(0.4);
-  opacity: 0.85;
+  margin-bottom: 8px;
+  opacity: 0.92;
+}
+.blueprint-logo {
+  display: block;
 }
 .empty-chat .t {
   font-size: 17px;

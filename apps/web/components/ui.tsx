@@ -176,7 +176,7 @@ export function Avatar({ agent, size = 42, radius }: { agent: Agent; size?: numb
     height: size,
     borderRadius: radius ?? 0,
     // softened HSL: 70% saturation reads neon on dark themes
-    background: `hsl(${agent.hue} 52% 55%)`,
+    background: `hsl(${agent.hue} 30% 44%)`,
     fontSize: Math.round(size * 0.52),
     display: "flex",
     alignItems: "center",

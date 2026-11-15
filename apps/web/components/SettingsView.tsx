@@ -71,10 +71,10 @@ const ROLE_ROWS: { role: ModelRole; labelKey: keyof Dict; descKey: keyof Dict }[
 const THEMES: { id: ThemeId; nameKey: keyof Dict; colors: string }[] = [
   { id: "mono", nameKey: "themeMono", colors: "#171717" },
   { id: "azure", nameKey: "themeAzure", colors: "#3b82f6" },
-  { id: "violet", nameKey: "themeViolet", colors: "#8b5cf6" },
-  { id: "rose", nameKey: "themeRose", colors: "#f43f5e" },
-  { id: "forest", nameKey: "themeForest", colors: "#10b981" },
-  { id: "amber", nameKey: "themeAmber", colors: "#f59e0b" },
+  { id: "violet", nameKey: "themeViolet", colors: "#6d28d9" },
+  { id: "rose", nameKey: "themeRose", colors: "#be123c" },
+  { id: "forest", nameKey: "themeForest", colors: "#047857" },
+  { id: "amber", nameKey: "themeAmber", colors: "#b45309" },
   { id: "ink", nameKey: "themeInk", colors: "#475569" },
 ];
 
@@ -164,7 +164,7 @@ function ProvidersCard() {
         const count = models.filter((m) => m.providerId === p.id).length;
         return (
           <div key={p.id} className="provider-card">
-            <div className="logo" style={{ background: `hsl(${p.name.length * 47 % 360} 55% 52%)` }}>
+            <div className="logo" style={{ background: `hsl(${p.name.length * 47 % 360} 28% 42%)` }}>
               {p.name.slice(0, 1)}
             </div>
             <div className="info">

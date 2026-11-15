@@ -25,7 +25,7 @@ function GroupAvatar({ agents }: { agents: Agent[] }) {
         <span
           key={a.id}
           style={{
-            background: `hsl(${a.hue} 52% 55%)`,
+            background: `hsl(${a.hue} 30% 44%)`,
           }}
         >
           {a.emoji}

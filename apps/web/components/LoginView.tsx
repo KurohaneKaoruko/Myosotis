@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { t } from "../i18n";
 import { login, setupAccount, fetchBootstrap } from "../lib/auth";
 import { setDbMode } from "../lib/db";
+import BlueprintLogo from "./BlueprintLogo";
 
 // ================================================================
 // Login / first-run setup gate shown in hub (remote) mode.
@@ -54,7 +55,9 @@ export default function LoginView({ onLoggedIn }: { onLoggedIn: () => void }) {
           <span />
         </div>
         <div className="login-no" aria-hidden>/01</div>
-        <div className="login-logo">🌸</div>
+        <div className="login-logo">
+          <BlueprintLogo size={72} />
+        </div>
         <h1>Myosotis</h1>
         <p className="login-sub">{phase === "setup" ? t("firstSetupHint") : t("welcomeBack")}</p>
         <div className="login-protocol" aria-hidden>
