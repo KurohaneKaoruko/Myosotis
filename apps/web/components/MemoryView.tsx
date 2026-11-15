@@ -335,7 +335,7 @@ export default function MemoryView() {
                       onClick={() => toggleScope(m)}
                       style={{ fontSize: 13, fontWeight: 700 }}
                     >
-                      {m.scope === "global" ? "🌐" : "🔒"}
+                      {m.scope === "global" ? "G" : "L"}
                     </button>
                     <button className="icon-btn" title={t("editMsg")} onClick={() => setEditing(m)}>
                       <Icon name="edit" size={15} />

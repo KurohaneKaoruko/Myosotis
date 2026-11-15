@@ -172,9 +172,9 @@ export default function ChatView() {
         )}
         {!noAgents && (
           <div className="ec-tips" aria-hidden>
-            <span>💡 {t("tipSlash")}</span>
-            <span>📎 {t("tipDropImage")}</span>
-            <span>🎙️ {t("tipVoice")}</span>
+            <span>{t("tipSlash")}</span>
+            <span>{t("tipDropImage")}</span>
+            <span>{t("tipVoice")}</span>
           </div>
         )}
       </div>

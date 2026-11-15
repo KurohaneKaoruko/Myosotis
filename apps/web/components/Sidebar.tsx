@@ -309,7 +309,7 @@ export default function Sidebar() {
                 <div className="t">
                   <span className="name">
                     {convo.pinned && <Icon name="pin" size={11} />}
-                    {convo.archived && <span className="pin-mark">🗄️</span>}
+                    {convo.archived && <span className="pin-mark">ARCH</span>}
                     {label}
                   </span>
                   <span className="time">{formatTime(convo.updatedAt)}</span>
@@ -507,7 +507,7 @@ export default function Sidebar() {
       )}
 
       <div className="sidebar-foot">
-        <span>{getDbMode() === "remote" ? `☁️ ${t("dataSynced")}` : `🔒 ${t("dataLocalOnly")}`}</span>
+        <span>{getDbMode() === "remote" ? `SYNC // ${t("dataSynced")}` : `LOCAL // ${t("dataLocalOnly")}`}</span>
       </div>
 
       {tagging && (

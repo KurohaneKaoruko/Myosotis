@@ -231,7 +231,7 @@ button {
   width: 38px;
   height: 38px;
   border: none;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   background: var(--surface-3);
   color: var(--accent);
   font-weight: 700;
@@ -1530,7 +1530,7 @@ button {
   color: var(--text-3);
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1542,17 +1542,17 @@ button {
     transform var(--dur-fast) var(--ease);
 }
 .composer .tool:hover {
-  background: var(--surface-2);
-  color: var(--text-2);
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .composer .tool.active {
-  color: #fff;
+  color: var(--accent-contrast);
   background: var(--accent);
-  animation: pulse-soft 1.4s var(--ease) infinite;
+  animation: rec-blink 1.2s var(--ease) infinite;
 }
-@keyframes pulse-soft {
+@keyframes rec-blink {
   50% {
-    box-shadow: 0 0 0 6px var(--accent-soft);
+    opacity: 0.72;
   }
 }
 .composer .tool svg {
@@ -3593,8 +3593,15 @@ textarea.input {
   color: var(--text);
 }
 .pin-mark {
-  font-size: 11px;
-  margin-right: 3px;
+  font-family: var(--mono);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  padding: 0 4px;
+  margin-right: 4px;
+  vertical-align: 1px;
 }
 
 /* message edit box */
@@ -3782,7 +3789,7 @@ pre[data-lang]::before {
   position: absolute;
   width: 62%;
   height: 62%;
-  border-radius: 50%;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
